@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revelado"
+version = "0.2.0.dev0"
+description = "Revelado: local, open photo developer (RAW develop, noise/CA clean-up, film emulation, retouch, culling)"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.12"
+authors = [{ name = "Jorge Luis Peña Sanchez" }]
+keywords = ["raw", "photography", "film-emulation", "rawtherapee", "denoise"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Multimedia :: Graphics",
+]
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "pydantic>=2.6",
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "opencv-contrib-python>=4.9",
+  "pillow>=10",
+  "rawpy>=0.19",
+  "psutil>=5.9",
+  "tifffile>=2024.1.1",
+  "imagecodecs>=2024.1.1",
+]
+
+[project.optional-dependencies]
+ai = ["anthropic>=0.40"]
+dev = ["pytest>=8", "httpx>=0.27"]
+
+[project.urls]
+Homepage = "https://github.com/Blue-Studio-Lab/Revelado"
+Issues = "https://github.com/Blue-Studio-Lab/Revelado/issues"
+
+[project.scripts]
+revelado = "revelado.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["revelado*"]
+
+[tool.setuptools.package-data]
+"revelado.profiles" = ["data/*.json"]
+"revelado" = ["prompts/*.md", "pipeline/data/*.json", "pipeline/data/*.pp3", "native/macos/*.swift"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "heavy: full-resolution image processing (run ONE at a time: pytest -m heavy -k <name>)",
+  "needs_raw: needs the CC0 RAW test files (python scripts/fetch_test_raws.py)",
+  "needs_rawtherapee: needs rawtherapee-cli installed",
+  "private_golden: compares against the private legacy engine (REVELADO_PRIVATE_GOLDEN_DIR)",
+  "network: downloads models (REVELADO_TEST_NETWORK=1)",
+]
+addopts = "-m 'not heavy and not private_golden'"

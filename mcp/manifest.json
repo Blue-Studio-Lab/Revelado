@@ -1,0 +1,89 @@
+{
+  "manifest_version": "0.4",
+  "name": "revelado",
+  "display_name": "Revelado",
+  "version": "0.1.0",
+  "description": "Drive the local Revelado RAW developer: technical culling, diagnostics, sample-first developing and safe exports.",
+  "long_description": "Connects Claude Desktop to the Revelado engine running on this computer. Only the folders you choose below can be opened, exports go only to the export folders you choose, originals are never modified, and previews sent to Claude are at most 1024 px without metadata. The Revelado app/engine must be running.",
+  "author": {
+    "name": "Jorge Luis Peña Sanchez",
+    "url": "https://github.com/bluestudiobrooks-gif"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blue-Studio-Lab/Revelado"
+  },
+  "homepage": "https://github.com/Blue-Studio-Lab/Revelado",
+  "documentation": "https://github.com/Blue-Studio-Lab/Revelado/tree/main/mcp#readme",
+  "support": "https://github.com/Blue-Studio-Lab/Revelado/issues",
+  "license": "GPL-3.0-or-later",
+  "keywords": ["photography", "raw", "culling", "film-emulation", "develop"],
+  "server": {
+    "type": "uv",
+    "entry_point": "src/revelado_mcp/__main__.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run", "--directory", "${__dirname}", "revelado-mcp",
+        "--engine-url", "${user_config.engine_url}",
+        "--allowed-dir", "${user_config.allowed_dirs}",
+        "--export-dir", "${user_config.export_dirs}"
+      ],
+      "env": {
+        "REVELADO_TOKEN_FILE": "${user_config.token_file}"
+      }
+    }
+  },
+  "user_config": {
+    "allowed_dirs": {
+      "type": "directory",
+      "title": "Photo folders",
+      "description": "Folders whose photos Claude may open (read-only).",
+      "multiple": true,
+      "required": true
+    },
+    "export_dirs": {
+      "type": "directory",
+      "title": "Export folders",
+      "description": "Folders where finished files may be written. Leave empty to disable export.",
+      "multiple": true,
+      "required": false
+    },
+    "engine_url": {
+      "type": "string",
+      "title": "Engine URL",
+      "description": "Local Revelado engine address (must be on this computer).",
+      "default": "http://127.0.0.1:8790",
+      "required": false
+    },
+    "token_file": {
+      "type": "file",
+      "title": "Engine token file (optional)",
+      "description": "The '.runtime_token' file the engine writes on start, if it is not in the default location.",
+      "required": false
+    }
+  },
+  "tools": [
+    {"name": "engine_status", "description": "Engine health, capabilities and allowed folders"},
+    {"name": "list_sessions", "description": "Previously opened folders inside the allow-list"},
+    {"name": "open_folder", "description": "Open an allow-listed photo folder"},
+    {"name": "list_photos", "description": "List photos with filters (rating, flag, cull verdict, camera)"},
+    {"name": "get_photo_info", "description": "EXIF summary, camera/lens profile and cull result"},
+    {"name": "get_preview", "description": "Small preview image (<=1024 px, no metadata)"},
+    {"name": "diagnose", "description": "Noise / chromatic aberration / shading statistics and masks"},
+    {"name": "set_rating", "description": "Set stars and pick/reject flag"},
+    {"name": "auto_cull_technical", "description": "Local technical cull (sharpness, eyes, exposure, bursts)"},
+    {"name": "list_films", "description": "Film looks and whether they are trained"},
+    {"name": "get_recipe", "description": "Working develop recipe and its schema"},
+    {"name": "patch_recipe", "description": "Change the working recipe (validated)"},
+    {"name": "develop_sample", "description": "Develop one photo and return before/after previews"},
+    {"name": "develop_batch", "description": "Queue a batch develop job"},
+    {"name": "job_status", "description": "Progress and outputs of an engine job"},
+    {"name": "cancel_job", "description": "Cancel a job started from this server"},
+    {"name": "export", "description": "Write finished files to an allowed export folder (requires confirm=true)"}
+  ],
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": {"python": ">=3.12"}
+  }
+}

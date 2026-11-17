@@ -1,0 +1,51 @@
+name: Bug report
+description: Something does not work as documented.
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Do not attach photos of real people (clients, family, strangers), client names or file paths.**
+        If an image is needed to reproduce, describe it or attach a synthetic / CC0 file.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what you got.
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open a folder with … 2. Click … 3. …"
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes:
+      label: Revelado version or commit
+      placeholder: "v0.1.0 or a1b2c3d"
+    validations: { required: true }
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS (Apple silicon), macOS (Intel), Windows, Linux, Other]
+    validations: { required: true }
+  - type: input
+    id: camera
+    attributes:
+      label: Camera and lens (if relevant)
+      placeholder: "Sony ILME-FX2 + FE 24-70 GM II, ARW, ISO 1600"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Engine log / error JSON
+      description: Paths under your home folder are shown as ~ by the engine's redaction. Check that nothing private remains.
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I removed client photos, names and private paths from this report.
+          required: true

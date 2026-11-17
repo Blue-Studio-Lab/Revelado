@@ -1,0 +1,632 @@
+{
+ "name": "Kodak Ektar 100 - escaneo Frontier/Noritsu - v1",
+ "source": "analyze_refs.py -> ref_analysis.json (6 referencias) + Kodak E-4046",
+ "notice": "Approximate Ektar 100-inspired emulation derived from 6 public reference images (not redistributed) and the published Kodak datasheet. Kodak and Ektar are trademarks of their owners; Revelado is not affiliated with or endorsed by Kodak.",
+ "color_space_notes": "Todo el trabajo de color en OkLab/OkLCh (L 0-1, C, h grados). Entrada: RAW demosaico lineal (rawpy, ProPhoto o sRGB lineal, sin curva de camara, sin auto-brillo, WB de camara). Salida: sRGB 16-bit (o Display P3 si se prefiere, misma especificacion en OkLab).",
+ "pipeline_order": [
+  "1 RAW -> lineal escena (highlight mode = blend/reconstruct, no clip)",
+  "2 exposicion por imagen: normalizar para que la mediana de luminancia (excluyendo 2% superior) caiga en ~0.16-0.20 lineal; limite +1.6 EV / -1.0 EV; luego chequear que <0.3% de pixeles superen +4 EV sobre gris (si no, bajar exposicion hasta cumplir)",
+  "3 WB: mantener la de camara; correccion opcional suave hacia neutros medidos (no forzar neutro: escenas nubladas conservan su azul ligero)",
+  "4 'densidad' de color: mezcla en lineal antes de la curva (crosstalk de capas): ver color_matrix_linear",
+  "5 curva tonal (film + escaneo) aplicada a la LUMINANCIA con preservacion de ratio de color + 25% por canal (da el ligero aumento de saturacion en sombras/medios y desaturacion natural en el hombro)",
+  "6 OkLCh: saturacion y matiz por banda (16 bandas), dependencia de L, compresion de croma, tratamiento de piel",
+  "7 split toning de neutros (sombras teal-frio, altas crema muy leve, blancos limpios)",
+  "8 MTF de film+escaneo (suavizar el pixel digital) y nitidez de escaner",
+  "9 halacion muy sutil (opcional)",
+  "10 GRANO (siempre al final, en espacio de salida codificado, a resolucion completa 7008x4672, nunca reescalar despues)",
+  "11 dither y guardado 16-bit TIFF; JPEG de vista a q95 4:4:4"
+ ],
+ "exposure": {
+  "target_mid_grey_linear": 0.18,
+  "median_target_linear_range": [
+   0.15,
+   0.2
+  ],
+  "max_push_ev": 1.6,
+  "max_pull_ev": -1.0,
+  "note": "Las tomas para S-Log3 estan ~1 EV abajo: lo normal sera +0.7..+1.2 EV. Ektar 100 tiene ~+3.5 EV de latitud de sobreexposicion; preferir datos completos en altas antes que brillo.",
+  "highlight_guard": "despues de la exposicion, el percentil 99.8 de luminancia lineal de escena debe quedar <= 4.0 (= +4.5 EV sobre gris) para entrar en la parte suave del hombro; si no, reducir exposicion."
+ },
+ "color_matrix_linear": {
+  "note": "Matriz de 'interimagen' suave tipo negativo: aumenta separacion R/G/B sin cambiar neutros (filas suman 1). Aplicar en lineal camara->sRGB lineal.",
+  "matrix": [
+   [
+    1.1,
+    -0.07,
+    -0.03
+   ],
+   [
+    -0.05,
+    1.09,
+    -0.04
+   ],
+   [
+    -0.02,
+    -0.08,
+    1.1
+   ]
+  ]
+ },
+ "tone_curve": {
+  "domain": "x = log2(Y_lineal / 0.18) (stops respecto a gris medio); y = valor de salida codificado sRGB 0-255 (luminancia)",
+  "interpolation": "spline monotona (PCHIP)",
+  "control_points": [
+   [
+    -9,
+    10.0
+   ],
+   [
+    -8,
+    11.0
+   ],
+   [
+    -7,
+    13.0
+   ],
+   [
+    -6,
+    16.0
+   ],
+   [
+    -5,
+    21.0
+   ],
+   [
+    -4,
+    29.5
+   ],
+   [
+    -3,
+    43.0
+   ],
+   [
+    -2,
+    63.0
+   ],
+   [
+    -1,
+    88.0
+   ],
+   [
+    0,
+    120.0
+   ],
+   [
+    0.5,
+    138.0
+   ],
+   [
+    1,
+    156.0
+   ],
+   [
+    1.5,
+    175.0
+   ],
+   [
+    2,
+    193.0
+   ],
+   [
+    2.5,
+    209.0
+   ],
+   [
+    3,
+    222.0
+   ],
+   [
+    3.5,
+    232.5
+   ],
+   [
+    4,
+    240.0
+   ],
+   [
+    4.5,
+    245.0
+   ],
+   [
+    5,
+    248.5
+   ],
+   [
+    6,
+    251.5
+   ],
+   [
+    7,
+    253.0
+   ]
+  ],
+  "black_point_code": 10,
+  "white_asymptote_code": 253,
+  "mid_slope_codes_per_stop": 34,
+  "measured_refs": "p0.5 luma 9-20 (negros levantados de escaner, sin aplastar), p99.9 233-253; clipping total <0.01% en todas; ref4/5/6 maximo 240-244 => hombro largo, el blanco nunca es 255 salvo especulares",
+  "rules": [
+   "nunca clip duro: blancos de vestido deben quedar 236-246 con textura",
+   "piel iluminada <= 235",
+   "cielo azul claro 160-215 con croma, no blanco",
+   "sombra profunda >= 10 con detalle"
+  ]
+ },
+ "per_channel_tone_mix": 0.25,
+ "hue_bands": {
+  "space": "OkLCh",
+  "n": 16,
+  "interpolation": "periodica suave (Catmull-Rom o coseno) entre centros; ponderar por croma: efecto completo para C>=0.04, rampa lineal desde C=0.008",
+  "centers_deg": [
+   0,
+   22.5,
+   45,
+   67.5,
+   90,
+   112.5,
+   135,
+   157.5,
+   180,
+   202.5,
+   225,
+   247.5,
+   270,
+   292.5,
+   315,
+   337.5
+  ],
+  "labels": [
+   "rosa-rojo",
+   "rojo",
+   "rojo-naranja/piel",
+   "naranja/tostado",
+   "ocre",
+   "amarillo",
+   "amarillo-verde (pasto)",
+   "verde",
+   "verde-cian",
+   "cian",
+   "cian-azul (cielo)",
+   "azul cielo",
+   "azul-violeta",
+   "violeta",
+   "magenta",
+   "rosa"
+  ],
+  "sat_mult": [
+   1.18,
+   1.3,
+   1.1,
+   1.14,
+   1.16,
+   1.2,
+   1.28,
+   1.2,
+   1.1,
+   1.14,
+   1.3,
+   1.28,
+   1.14,
+   0.95,
+   1.0,
+   1.1
+  ],
+  "hue_shift_deg": [
+   3,
+   -2,
+   -4,
+   -4,
+   2,
+   4,
+   -3,
+   6,
+   8,
+   6,
+   3,
+   -8,
+   -10,
+   -8,
+   6,
+   6
+  ],
+  "lightness_dependence": {
+   "note": "multiplicador efectivo = 1 + (sat_mult-1)*w(L)",
+   "w_L_points": [
+    [
+     0.0,
+     0.35
+    ],
+    [
+     0.15,
+     0.6
+    ],
+    [
+     0.3,
+     1.0
+    ],
+    [
+     0.7,
+     1.0
+    ],
+    [
+     0.85,
+     0.7
+    ],
+    [
+     0.95,
+     0.3
+    ],
+    [
+     1.0,
+     0.0
+    ]
+   ]
+  },
+  "subtractive_density": {
+   "note": "colores saturados se oscurecen como tintes: L -= k*(C_out - C_in) - 0.04*C_out para C_out>0.06",
+   "k_by_hue": {
+    "azules 215-275": 0.35,
+    "rojos 0-35": 0.25,
+    "verdes 120-180": 0.2,
+    "resto": 0.12
+   }
+  },
+  "chroma_compression": {
+   "knee_C": 0.16,
+   "max_C": 0.24,
+   "curve": "C' = knee + (C-knee)/(1+(C-knee)/(max-knee)) para C>knee",
+   "also": "mapear a gamut sRGB reduciendo C a L y h constantes"
+  },
+  "measured_targets": {
+   "cielo_azul_soleado": {
+    "okh": [
+     232,
+     252
+    ],
+    "okC": [
+     0.055,
+     0.085
+    ],
+    "okL": [
+     0.66,
+     0.74
+    ],
+    "note": "ref3 cian-azul 233 C0.075-0.081; ref4 252 C0.056. Ektar empuja cielo hacia azul profundo/cian, nunca violeta"
+   },
+   "cielo_nublado_azulado": {
+    "okh": [
+     255,
+     268
+    ],
+    "okC": [
+     0.02,
+     0.03
+    ],
+    "okL": [
+     0.73,
+     0.8
+    ]
+   },
+   "pasto_iluminado": {
+    "okh": [
+     128,
+     134
+    ],
+    "okC": [
+     0.1,
+     0.12
+    ],
+    "okL": [
+     0.6,
+     0.65
+    ]
+   },
+   "pasto_sombra": {
+    "okh": [
+     133,
+     150
+    ],
+    "okC": [
+     0.05,
+     0.09
+    ],
+    "okL": [
+     0.3,
+     0.47
+    ]
+   },
+   "bosque_oscuro_lejano": {
+    "okh": [
+     210,
+     228
+    ],
+    "okC": [
+     0.03,
+     0.05
+    ],
+    "okL": [
+     0.21,
+     0.29
+    ],
+    "note": "verdes oscuros -> teal/cian: rasgo clave Ektar"
+   },
+   "rojo_pintura": {
+    "okh": [
+     25,
+     30
+    ],
+    "okC": [
+     0.08,
+     0.13
+    ]
+   },
+   "naranja_madera": {
+    "okh": [
+     50,
+     52
+    ],
+    "okC": [
+     0.1,
+     0.11
+    ]
+   },
+   "blancos": {
+    "okC_max": 0.013,
+    "okh": "50-60 (crema) en sol; neutro en nublado/niebla (C<0.008)"
+   }
+  }
+ },
+ "skin": {
+  "detection": {
+   "okh": [
+    25,
+    72
+   ],
+   "okC": [
+    0.03,
+    0.15
+   ],
+   "okL": [
+    0.3,
+    0.93
+   ],
+   "soft_mask": "gaussiana en h centrada 50 sigma 14, combinada con rampa en C; suavizar mascara espacialmente (sigma 3 px)"
+  },
+  "targets": {
+   "okh_center": 46,
+   "okh_min": 40,
+   "okh_max_lit": 65,
+   "okC_mid_L": [
+    0.065,
+    0.09
+   ],
+   "okC_max": 0.105
+  },
+  "measured": {
+   "ref1_cara_atardecer": {
+    "okL": 0.52,
+    "okC": 0.09,
+    "okh": 38.7
+   },
+   "ref1_brazo": {
+    "okC": 0.072,
+    "okh": 45.4
+   },
+   "ref1_hombro_iluminado": {
+    "okL": 0.89,
+    "okC": 0.063,
+    "okh": 79
+   },
+   "ref4_brazo": {
+    "okL": 0.48,
+    "okC": 0.075,
+    "okh": 40.4
+   },
+   "ref1_auto_skin": {
+    "okL": 0.62,
+    "okC": 0.092,
+    "okh": 47.9
+   }
+  },
+  "rules": [
+   "Ektar tiende a rojo/magenta: permitir giro de matiz de -3 a -6 grados hacia rojo pero NUNCA por debajo de h=40 (evitar piel rubicunda/quemada)",
+   "saturacion de piel x1.06 max (no aplicar el 1.10-1.14 de la banda); limite C 0.105",
+   "en altas (L>0.8) la piel gira a crema dorado h 60-70 con C <=0.065, como ref1 hombro",
+   "luminancia de piel: no oscurecer por 'densidad sustractiva' (k=0)"
+  ]
+ },
+ "split_toning_oklab": {
+  "apply_to": "todos los pixeles, ponderado por (1 - min(C/0.06,1)*0.6) para afectar sobre todo neutros",
+  "shadows": {
+   "L_range": [
+    0.0,
+    0.32
+   ],
+   "a": -0.006,
+   "b": -0.008,
+   "note": "teal-azul frio (ref4 -0.025/-0.015 en bosque, ref6 -0.005/-0.009, ref1 -0.013/-0.010)"
+  },
+  "mids": {
+   "L_range": [
+    0.32,
+    0.68
+   ],
+   "a": 0.0,
+   "b": 0.002
+  },
+  "highlights": {
+   "L_range": [
+    0.68,
+    0.9
+   ],
+   "a": 0.002,
+   "b": 0.006,
+   "note": "crema calido muy leve"
+  },
+  "top": {
+   "L_range": [
+    0.9,
+    1.0
+   ],
+   "a": 0.0,
+   "b": 0.002,
+   "note": "blancos casi neutros: el vestido debe verse blanco, no amarillo"
+  },
+  "blend": "transiciones suaves (smoothstep 0.06 de ancho)"
+ },
+ "highlights": {
+  "rolloff": "por el hombro de la curva; ademas desaturar progresivamente: C *= 1 - 0.6*smoothstep(0.86, 0.99, L)",
+  "fog_target": "niebla brillante L 0.90-0.93, C<0.006 (ref5 233,231,229)",
+  "max_output_code_diffuse_white": 246
+ },
+ "local_contrast": {
+  "clarity": "ninguna (film no tiene micro-contraste artificial)",
+  "film_scan_mtf": {
+   "pre_blur_gaussian_sigma_px": 0.55,
+   "scanner_usm": {
+    "radius_px": 1.4,
+    "amount": 0.3,
+    "threshold_code": 1.5
+   },
+   "note": "quita el borde digital 'perfecto' y deja la acutancia de un escaneo Frontier. Aplicar en luminancia antes del grano."
+  }
+ },
+ "halation": {
+  "enabled": true,
+  "threshold_linear_scene": 2.0,
+  "radius_px_at_7008": 22,
+  "secondary_radius_px": 60,
+  "strength": 0.018,
+  "color_rgb": [
+   1.0,
+   0.35,
+   0.12
+  ],
+  "note": "Ektar tiene capa antihalo: efecto casi invisible, solo un halo calido en especulares/ventanas/lamparas. Nunca alrededor de piel o cielo difuso."
+ },
+ "grain": {
+  "physical_basis": "Ektar 100: RMS granularity 8 (Kodak E-4046), la mas fina del mundo en negativo color. 35mm = 36 mm / 7008 px = 5.14 um/px. Nubes de tinte 5-12 um => estructura de 1-2.5 px.",
+  "resolution": "generar a resolucion final 7008x4672 (escalar sigma linealmente con ancho/7008 si cambia)",
+  "measured_refs_web": "hp-std en zonas planas (web ~2000px, ~3x reducido): 1.1-1.35 codigos a nivel 140-170, 0.7-1.06 a 190-217, 0.13-0.35 a >235. Ajustado por la reduccion (~x2.5) => ~2.5-3.0 codigos nativos en medios.",
+  "spatial": {
+   "method": "suma de dos octavas de ruido blanco gaussiano filtrado + modulacion de agrupamiento",
+   "octave_fine": {
+    "gaussian_sigma_px": 0.65,
+    "weight": 0.72
+   },
+   "octave_coarse": {
+    "gaussian_sigma_px": 1.5,
+    "weight": 0.45
+   },
+   "renormalize": "despues de sumar, normalizar la desviacion a 1.0",
+   "clumping": {
+    "lowfreq_field_sigma_px": 7.0,
+    "modulation_depth": 0.22,
+    "note": "amplitud *= 1 + 0.22*N(0,1) suavizado 7px (recortado a [0.6,1.4]): evita el patron uniforme digital"
+   },
+   "nonlinearity": {
+    "note": "grano de plata/tinte no es gaussiano: aplicar g' = sign(g)*|g|^0.9 y renormalizar; leve asimetria +0.08 (puntos claros de baja densidad un poco mas pequenos)"
+   },
+   "target_autocorrelation": {
+    "lag1": 0.42,
+    "lag2": 0.12,
+    "lag3": 0.03
+   },
+   "psd_shape": "plano hasta ~0.08 ciclos/px, cae -6 dB a ~0.22 ciclos/px, -20 dB en Nyquist (0.5). Nada de energia en frecuencias muy bajas (sin 'manchas').",
+   "random_seed": "distinta por imagen (hash del nombre de archivo) para que no se repita el patron"
+  },
+  "amplitude_vs_luma": {
+   "domain": "valor de salida sRGB codificado 0-255 (luminancia ANTES de anadir grano); amplitud = desviacion estandar en codigos 8-bit (x257 para 16-bit)",
+   "points": [
+    [
+     0,
+     0.5
+    ],
+    [
+     8,
+     0.9
+    ],
+    [
+     16,
+     1.4
+    ],
+    [
+     32,
+     2.0
+    ],
+    [
+     55,
+     2.5
+    ],
+    [
+     80,
+     2.75
+    ],
+    [
+     110,
+     2.8
+    ],
+    [
+     140,
+     2.6
+    ],
+    [
+     170,
+     2.2
+    ],
+    [
+     200,
+     1.65
+    ],
+    [
+     225,
+     1.05
+    ],
+    [
+     240,
+     0.6
+    ],
+    [
+     250,
+     0.3
+    ],
+    [
+     255,
+     0.15
+    ]
+   ],
+   "global_scale": 1.0,
+   "user_tuning_range": [
+    0.7,
+    1.35
+   ],
+   "note": "pico en sombras-medios (80-120), mas fino en altas (densidad alta del negativo comprimida por el hombro) y en negro profundo. A 100% debe leerse como textura organica fina, a pantalla completa casi invisible."
+  },
+  "exposure_dependence": {
+   "note": "si la imagen se empujo (+EV) en el paso 2, escalar amplitud *= 1 + 0.12*max(push_ev,0) (negativo subexpuesto = mas grano visible)"
+  },
+  "color": {
+   "luma_fraction": 0.88,
+   "chroma_to_luma_ratio": 0.12,
+   "method": "grano principal identico en R,G,B (luminancia) + 3 campos independientes por canal (misma estructura espacial, seeds distintos) con 0.12 de amplitud relativa, R y B ligeramente mayores que G (1.1/0.9/1.15)",
+   "measured": "ref1 relacion croma/luma en hp plano 0.10 (las demas contaminadas por compresion webp)"
+  },
+  "application": {
+   "domain": "salida codificada (no lineal), aditivo en float",
+   "highlight_protection": "multiplicar por (1 - smoothstep(0.985, 1.0, v)) y nunca empujar un pixel por encima de 254.5/255 ni debajo de 0",
+   "preserve_mean": true,
+   "after": "no reescalar, no aplicar reduccion de ruido ni nitidez despues del grano; JPEG de vista q>=95 4:4:4"
+  }
+ },
+ "vignette": {
+  "enabled": false,
+  "note": "a lo sumo -0.10 EV en esquinas si se quiere imitar objetivo; por defecto apagado"
+ },
+ "acceptance_checks": [
+  "clip (cualquier canal >= 254.5) < 0.3% de pixeles salvo especulares",
+  "p0.5 luma >= 8 codigos",
+  "piel: okh 40-55, okC 0.06-0.10",
+  "cielo azul: okh 230-255 sin violeta (>265)",
+  "blancos de vestido: okC < 0.015, L 0.90-0.96",
+  "inspeccion a 100%: grano visible pero fino en medios, sin bandas ni patron repetido"
+ ]
+}

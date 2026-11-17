@@ -1,0 +1,66 @@
+{
+  "schema": "revelado.profile_seed/1",
+  "license": "CC-BY-SA-4.0",
+  "notes": "Seed of the Revelado community profile DB (design 03). Values measured on the maintainers' own files or taken from manufacturer specifications. Lensfun / darktable data are NOT bundled here (see THIRD_PARTY when added).",
+  "cameras": [
+    {
+      "key": "sony/ilme-fx2",
+      "maker": "Sony",
+      "model": "ILME-FX2",
+      "aliases": ["FX2"],
+      "mount": "sony-e",
+      "sensor": {"format": "full-frame", "width_mm": 35.9, "height_mm": 23.9, "raw_px": [7040, 4688], "visible_px": [7008, 4672],
+                 "cfa": "bayer-rggb", "bits": 14, "olpf": true, "family": "sony-33mp-bsi-2021", "base_iso": [100], "base_iso_log": [800, 4000]},
+      "levels": {"black": [512, 512, 512, 512], "white_exif_subifd": 16383, "white_exif_maker": 15360, "white_effective": 15360},
+      "noise": {"model": "darktable-poisson-gaussian", "source": "sensor family (ILCE-7M4) - not bundled; ISO heuristic used", "confidence": 0.7},
+      "lens_corrections": {"raw_vignetting_precompensated": true, "embedded_parser": "sony-subifd-7032-7035-7037"},
+      "quirks": [
+        "exiftool <=13.55 decodes SonyISO / StopsAboveBaseISO incorrectly for this body; use ISO/REI",
+        "camera JPEG is in the picture profile's gamma (often S-Log3); never cull on it without a display transform"
+      ],
+      "provenance": [
+        {"field": "sensor", "source": "manufacturer spec sheet"},
+        {"field": "levels", "source": "exiftool on maintainer's files", "date": "2026-11-17"}
+      ],
+      "license": "CC-BY-SA-4.0"
+    }
+  ],
+  "lenses": [
+    {
+      "key": "sony/fe-70-200mm-f2.8-gm-oss-ii",
+      "maker": "Sony",
+      "model": "FE 70-200mm F2.8 GM OSS II",
+      "match": {"exif": ["FE 70-200mm F2.8 GM OSS II", "Sony FE 70-200mm F2.8 GM OSS II"], "not": ["FE 70-200mm F2.8 GM OSS"], "sony_lens_type2": [32874]},
+      "mount": "sony-e", "format": "full-frame", "focal_mm": [70, 200], "max_aperture": 2.8,
+      "geometry": {"preferred": "embedded", "lensfun": null},
+      "tca": {"class": "low"}, "loca": {"class": "low"}, "vignetting": {"class": "medium"}, "sharpness": {"class": "high"},
+      "notes": "Embedded Sony correction data present in every frame (distortion, vignetting, TCA). Lateral CA left to RawTherapee raw CA.",
+      "provenance": [{"field": "classes", "source": "embedded params on maintainer's files (26 frames)", "date": "2026-11-17"}],
+      "license": "CC-BY-SA-4.0"
+    },
+    {
+      "key": "sony/fe-24-70mm-f2.8-gm",
+      "maker": "Sony",
+      "model": "FE 24-70mm F2.8 GM",
+      "match": {"exif": ["FE 24-70mm F2.8 GM", "Sony FE 24-70mm F2.8 GM"], "not": ["FE 24-70mm F2.8 GM II"]},
+      "mount": "sony-e", "format": "full-frame", "focal_mm": [24, 70], "max_aperture": 2.8,
+      "geometry": {"preferred": "embedded", "lensfun": "FE 24-70mm f/2.8 GM (cross-check only)"},
+      "tca": {"class": "medium", "note": "corner shift > 1 px at 70 mm per embedded data"},
+      "loca": {"class": "medium"}, "vignetting": {"class": "medium"}, "sharpness": {"class": "high"},
+      "notes": "Mark I. Must not match the GM II. Distortion -2.0 % barrel at 26 mm, +3.45 % pincushion at 70 mm (embedded data).",
+      "provenance": [{"field": "classes", "source": "embedded params on maintainer's files (124 frames)", "date": "2026-11-17"}],
+      "license": "CC-BY-SA-4.0"
+    }
+  ],
+  "generic": {
+    "sensor_by_format": {
+      "full-frame": {"width_mm": 36.0, "noise_iso_offset_stops": 0.0},
+      "aps-c": {"width_mm": 23.5, "noise_iso_offset_stops": 0.8},
+      "m43": {"width_mm": 17.3, "noise_iso_offset_stops": 1.4},
+      "1in": {"width_mm": 13.2, "noise_iso_offset_stops": 2.0},
+      "medium-format": {"width_mm": 43.8, "noise_iso_offset_stops": -0.4}
+    },
+    "loca_by_max_aperture": [[1.4, "high"], [2.0, "medium"], [2.8, "medium"], [99, "low"]],
+    "log_ev_prior": {"s-log3": 1.0, "s-log2": 1.0, "hlg": 0.5, "c-log3": 1.0, "c-log2": 1.0, "v-log": 1.0, "f-log": 1.0, "f-log2": 1.0, "n-log": 1.0, "d-log": 1.0}
+  }
+}

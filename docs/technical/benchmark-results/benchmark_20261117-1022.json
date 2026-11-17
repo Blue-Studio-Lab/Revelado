@@ -1,0 +1,279 @@
+{
+ "date": "2026-11-17 10:17",
+ "version": "0.2.0.dev0",
+ "machine": "Darwin arm64, 10 CPU, 16 GB RAM",
+ "rawtherapee": "RawTherapee, version 5.13, command line.",
+ "nr": [
+  {
+   "file": "sony_ilme-fx3_iso20000.arw",
+   "iso": 20000,
+   "patches": 16,
+   "nr_off_x100": {
+    "std_a": 0.528,
+    "std_b": 0.772,
+    "std_L": 3.772,
+    "n": 16
+   },
+   "nr_auto_x100": {
+    "std_a": 0.023,
+    "std_b": 0.021,
+    "std_L": 0.867,
+    "n": 16
+   },
+   "reduction_pct": {
+    "std_L": 77.0,
+    "std_a": 95.6,
+    "std_b": 97.3
+   },
+   "nr_params": {
+    "noise_stops": 8.53,
+    "level": 1.0,
+    "luma": 33.2,
+    "ldetail": 63.4,
+    "chroma": 40.0,
+    "chroma_method": "AUT",
+    "demosaic": "amaze",
+    "deconv_contrast": 40.0,
+    "mode": "auto"
+   }
+  },
+  {
+   "file": "canon_eos-r50_iso32000.cr3",
+   "iso": 32000,
+   "patches": 16,
+   "nr_off_x100": {
+    "std_a": 5.531,
+    "std_b": 3.53,
+    "std_L": 10.826,
+    "n": 16
+   },
+   "nr_auto_x100": {
+    "std_a": 0.319,
+    "std_b": 0.274,
+    "std_L": 5.197,
+    "n": 16
+   },
+   "reduction_pct": {
+    "std_L": 52.0,
+    "std_a": 94.2,
+    "std_b": 92.2
+   },
+   "nr_params": {
+    "noise_stops": 8.32,
+    "level": 1.0,
+    "luma": 31.9,
+    "ldetail": 64.0,
+    "chroma": 40.0,
+    "chroma_method": "AUT",
+    "demosaic": "amaze",
+    "deconv_contrast": 40.0,
+    "mode": "auto"
+   }
+  }
+ ],
+ "ca": [
+  {
+   "file": "sony_ilce-7m4_iso250.arw",
+   "ca_off": {
+    "lateral": {
+     "tiles": 2424,
+     "r_shift_p90_px": 0.048,
+     "r_shift_mean_px": 0.025,
+     "b_shift_p90_px": 0.122,
+     "b_shift_mean_px": 0.058
+    },
+    "fringe_x1000": 19.401
+   },
+   "ca_auto": {
+    "lateral": {
+     "tiles": 2427,
+     "r_shift_p90_px": 0.04,
+     "r_shift_mean_px": 0.021,
+     "b_shift_p90_px": 0.087,
+     "b_shift_mean_px": 0.044
+    },
+    "fringe_x1000": 18.42
+   }
+  },
+  {
+   "file": "nikon_z6_iso100.nef",
+   "ca_off": {
+    "lateral": {
+     "tiles": 221,
+     "r_shift_p90_px": 0.027,
+     "r_shift_mean_px": 0.016,
+     "b_shift_p90_px": 0.134,
+     "b_shift_mean_px": 0.066
+    },
+    "fringe_x1000": 25.659
+   },
+   "ca_auto": {
+    "lateral": {
+     "tiles": 227,
+     "r_shift_p90_px": 0.023,
+     "r_shift_mean_px": 0.013,
+     "b_shift_p90_px": 0.039,
+     "b_shift_mean_px": 0.022
+    },
+    "fringe_x1000": 25.242
+   }
+  },
+  {
+   "file": "fujifilm_x-t3_iso160.raf",
+   "ca_off": {
+    "lateral": {
+     "tiles": 77,
+     "r_shift_p90_px": 0.679,
+     "r_shift_mean_px": 0.424,
+     "b_shift_p90_px": 2.692,
+     "b_shift_mean_px": 1.474
+    },
+    "fringe_x1000": 28.155
+   },
+   "ca_auto": {
+    "lateral": {
+     "tiles": 77,
+     "r_shift_p90_px": 0.679,
+     "r_shift_mean_px": 0.425,
+     "b_shift_p90_px": 2.692,
+     "b_shift_mean_px": 1.472
+    },
+    "fringe_x1000": 28.092
+   }
+  }
+ ],
+ "perf": [
+  {
+   "file": "sony_ilce-7m4_iso250.arw",
+   "preset": "neutral",
+   "size": [
+    7008,
+    4672
+   ],
+   "megapixels": 32.7,
+   "stage_seconds": {
+    "exposure": 0.5,
+    "develop": 21.82,
+    "hair": 0.0,
+    "render": 8.68,
+    "reframe": 2.38,
+    "total": 35.42
+   },
+   "render_breakdown_s": {
+    "tono": 1.1,
+    "caras": 0.0,
+    "nr_residual": 1.0,
+    "piel": 0.2,
+    "nitidez": 1.1,
+    "granos": 0.0,
+    "gamut": 1.4,
+    "guardar": 3.4
+   },
+   "wall_s": 35.57,
+   "peak_tree_rss_mb": 4148,
+   "face_detector": "none"
+  },
+  {
+   "file": "sony_ilce-7m4_iso250.arw",
+   "preset": "editorial_ektar",
+   "size": [
+    7008,
+    4672
+   ],
+   "megapixels": 32.7,
+   "stage_seconds": {
+    "exposure": 0.51,
+    "develop": 25.16,
+    "hair": 0.0,
+    "render": 32.49,
+    "reframe": 2.86,
+    "total": 63.38
+   },
+   "render_breakdown_s": {
+    "exposicion_sujeto": 2.2,
+    "negativo": 3.3,
+    "grano": 3.6,
+    "escaneo": 8.2,
+    "color": 3.5,
+    "caras": 0.0,
+    "acento": 0.6,
+    "nr_residual": 0.8,
+    "piel": 2.4,
+    "nitidez": 1.5,
+    "granos": 0.0,
+    "gamut": 2.0,
+    "web": 0.6,
+    "guardar": 3.0
+   },
+   "wall_s": 63.61,
+   "peak_tree_rss_mb": 3563,
+   "face_detector": "vision"
+  },
+  {
+   "file": "sony_ilme-fx3_iso20000.arw",
+   "preset": "neutral",
+   "size": [
+    3794,
+    2534
+   ],
+   "megapixels": 9.6,
+   "stage_seconds": {
+    "exposure": 0.31,
+    "develop": 6.68,
+    "hair": 0.0,
+    "render": 2.69,
+    "reframe": 2.56,
+    "total": 14.1
+   },
+   "render_breakdown_s": {
+    "tono": 0.4,
+    "caras": 0.0,
+    "nr_residual": 0.2,
+    "piel": 0.1,
+    "nitidez": 0.3,
+    "granos": 0.0,
+    "gamut": 0.4,
+    "guardar": 1.0
+   },
+   "wall_s": 14.24,
+   "peak_tree_rss_mb": 2812,
+   "face_detector": "none"
+  },
+  {
+   "file": "sony_ilme-fx3_iso20000.arw",
+   "preset": "editorial_ektar",
+   "size": [
+    4240,
+    2832
+   ],
+   "megapixels": 12.0,
+   "stage_seconds": {
+    "exposure": 0.3,
+    "develop": 6.9,
+    "hair": 0.0,
+    "render": 10.75,
+    "reframe": 1.71,
+    "total": 21.39
+   },
+   "render_breakdown_s": {
+    "exposicion_sujeto": 1.5,
+    "negativo": 0.8,
+    "grano": 1.0,
+    "escaneo": 3.0,
+    "color": 1.0,
+    "caras": 0.0,
+    "acento": 0.2,
+    "nr_residual": 0.2,
+    "piel": 0.5,
+    "nitidez": 0.3,
+    "granos": 0.0,
+    "gamut": 0.7,
+    "web": 0.4,
+    "guardar": 1.0
+   },
+   "wall_s": 21.53,
+   "peak_tree_rss_mb": 2782,
+   "face_detector": "vision"
+  }
+ ]
+}

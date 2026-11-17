@@ -1,0 +1,24 @@
+name: Film profile proposal
+description: Propose a film stock profile or a change to one.
+labels: [film-profile, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Revelado builds film profiles from **your own** scans, locally. Only propose publishing a profile or its
+        parameters if you own the scans (or they are under a licence that allows derived works) and say so below.
+  - type: input
+    id: stock
+    attributes:
+      label: Film stock
+      placeholder: "Kodak Portra 400"
+    validations: { required: true }
+  - type: textarea
+    id: source
+    attributes:
+      label: Source of the scans and their licence
+    validations: { required: true }
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (scanner, development, number of rolls)

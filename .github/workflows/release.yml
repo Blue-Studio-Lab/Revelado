@@ -1,0 +1,175 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Release SKELETON. It runs on a signed tag vX.Y.Z and produces a DRAFT GitHub release with:
+#   - sdists + wheels of revelado and revelado-mcp, the .mcpb bundle for Claude Desktop,
+#     the built web app, and the GPL source tarball;
+#   - SHA256SUMS;
+#   - Sigstore-backed build-provenance attestations (keyless, via GitHub OIDC; no stored keys).
+# A maintainer verifies the draft and publishes it by hand (GOVERNANCE.md -> Releases).
+#
+# Secrets: none are used today. Future signing material (installers) belongs ONLY in the protected
+# "release" environment, under these documented placeholder names (do not create them before they are needed):
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_API_ISSUER, APPLE_API_KEY
+#   WINDOWS_SIGNING (SignPath or Azure Trusted Signing configuration)
+#   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD (updater signatures)
+# PyPI publishing (job "pypi") uses Trusted Publishing (OIDC), so no PyPI token is ever stored.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Build and attest only; do not create a draft release"
+        type: boolean
+        default: true
+
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          # No dependency cache in the release job: a poisoned cache could end up in published artifacts.
+          package-manager-cache: false
+      - name: Reproducibility settings
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)" >> "$GITHUB_ENV"
+          echo "PYTHONHASHSEED=0" >> "$GITHUB_ENV"
+      - name: Check tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          ver="$(python -c 'import tomllib;print(tomllib.load(open("engine/pyproject.toml","rb"))["project"]["version"])')"
+          [ "v$ver" = "$TAG" ] || { echo "::error::tag $TAG does not match engine/pyproject.toml version $ver"; exit 1; }
+      - name: Check MCP package version matches tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          ver="$(python -c 'import tomllib;print(tomllib.load(open("mcp/pyproject.toml","rb"))["project"]["version"])')"
+          [ "v$ver" = "$TAG" ] || { echo "::error::tag $TAG does not match mcp/pyproject.toml version $ver"; exit 1; }
+      - name: Build Python packages (revelado, revelado-mcp)
+        run: |
+          python -m pip install --upgrade build
+          python -m build engine --outdir pypi/revelado/
+          python -m build mcp --outdir pypi/revelado-mcp/
+          mkdir -p dist && cp pypi/revelado/* pypi/revelado-mcp/* dist/
+      - name: Build Claude Desktop bundle (.mcpb)
+        env:
+          MCPB_VERSION: "2.1.2"
+        run: npx --yes "@anthropic-ai/mcpb@${MCPB_VERSION}" pack mcp "dist/revelado-mcp-${GITHUB_REF_NAME}.mcpb"
+      - name: Build web app
+        working-directory: apps/web
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+          tar --sort=name --mtime="@${SOURCE_DATE_EPOCH}" --owner=0 --group=0 --numeric-owner \
+            -czf "../../dist/revelado-web-${GITHUB_REF_NAME}.tar.gz" -C dist .
+      - name: GPL corresponding source
+        run: git archive --format=tar.gz --prefix="revelado-${GITHUB_REF_NAME}/" -o "dist/revelado-${GITHUB_REF_NAME}-source.tar.gz" HEAD
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum -- * | tee SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pypi-revelado
+          path: pypi/revelado/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pypi-revelado-mcp
+          path: pypi/revelado-mcp/
+          if-no-files-found: error
+          retention-days: 7
+
+  attest-and-draft:
+    name: attest + draft release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: release        # protected: required reviewer, v* tags only
+    permissions:
+      contents: write           # create the draft release
+      id-token: write           # Sigstore keyless signing for attestations
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - name: Verify checksums
+        working-directory: dist
+        run: sha256sum -c SHA256SUMS
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*"
+      - name: Create draft release
+        if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft --verify-tag \
+            --title "Revelado $TAG" \
+            --notes "Draft. See CHANGELOG.md. Verify any file with: gh attestation verify <file> --repo $GITHUB_REPOSITORY"
+
+  # PyPI via Trusted Publishing (OIDC): no token is stored anywhere. One-time setup by the maintainer on pypi.org:
+  #   project "revelado" and project "revelado-mcp" -> Publishing -> add a GitHub publisher:
+  #   owner Blue-Studio-Lab, repo Revelado, workflow release.yml, environment "pypi".
+  # Runs only after the draft release exists, and only for real tags (never on dry runs).
+  pypi:
+    name: publish to PyPI (${{ matrix.package }})
+    needs: attest-and-draft
+    if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment:
+      name: pypi              # protected: required reviewer
+      url: https://pypi.org/project/${{ matrix.package }}/
+    permissions:
+      id-token: write         # Trusted Publishing
+    strategy:
+      max-parallel: 1
+      matrix:
+        package: [revelado, revelado-mcp]
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: pypi-${{ matrix.package }}
+          path: pypi-dist/
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          packages-dir: pypi-dist/
+          attestations: true    # PEP 740 attestations, signed with Sigstore

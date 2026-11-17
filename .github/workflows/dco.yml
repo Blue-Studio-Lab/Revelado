@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Every commit in a PR must carry a "Signed-off-by:" line (Developer Certificate of Origin, see CONTRIBUTING.md).
+name: DCO
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dco-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  dco:
+    name: dco
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check sign-off on every commit
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          missing=0
+          for c in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            author_email="$(git log -1 --format='%ae' "$c")"
+            if ! git log -1 --format='%B' "$c" | grep -qiE "^Signed-off-by: .+ <${author_email}>$"; then
+              echo "::error::Commit $(git log -1 --format='%h %s' "$c") has no Signed-off-by matching its author (${author_email})."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Fix with: git rebase --signoff $BASE_SHA && git push --force-with-lease"
+            exit 1
+          fi
+          echo "All commits are signed off."

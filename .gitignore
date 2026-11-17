@@ -1,0 +1,66 @@
+# Nunca publicar: llaves, fotos de clientes, escaneos, datos locales
+.env
+.env.*
+!.env.example
+engine/.runtime_token
+
+# RAW / imágenes de trabajo (mayúsculas y minúsculas)
+*.ARW
+*.arw
+*.CR2
+*.cr2
+*.CR3
+*.cr3
+*.NEF
+*.nef
+*.DNG
+*.dng
+*.RAF
+*.raf
+*.ORF
+*.orf
+*.RW2
+*.rw2
+*.tif
+*.tiff
+*.TIF
+*.TIFF
+# Escaneos de película del usuario (privados)
+**/scans/
+
+# Datos locales y de prueba (se descargan con scripts/fetch_test_raws.py)
+/data/
+/cache/
+/test-photos/
+/test-data/
+
+# Configuración local de Claude Code / editores
+.claude/
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Node / web
+node_modules/
+dist/
+test-results/
+playwright-report/
+
+# Docs build (mkdocs)
+/site/
+
+# Paquetes generados
+*.mcpb
+
+# Sistema
+.DS_Store
+*.log

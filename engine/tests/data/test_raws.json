@@ -1,0 +1,90 @@
+{
+ "source": "https://raw.pixls.us",
+ "licence_check": "raw.pixls.us repository listing (json/getrepository.php), column 'License' = Creative Commons 0 for every file; checked 2026-11-17",
+ "files": [
+  {
+   "role": "sony_33mp",
+   "filename": "sony_ilce-7m4_iso250.arw",
+   "make": "Sony",
+   "model": "ILCE-7M4",
+   "mode": "14bit (3:2)",
+   "megapixels": 33,
+   "iso": 250,
+   "size_mb": 38.78,
+   "sha256": "73c79fd9fbd73dff89548b611aaedc3c5a7e3412ec190c23881ea8434ff2214c",
+   "url": "https://raw.pixls.us/getfile.php/6932/nice/Sony - ILCE-7M4 - 14bit (3:2).ARW",
+   "raw_pixls_us_id": 6932,
+   "licence": "CC0-1.0"
+  },
+  {
+   "role": "canon",
+   "filename": "canon_eos-6d_iso400.cr2",
+   "make": "Canon",
+   "model": "EOS 6D",
+   "mode": "RAW (3:2)",
+   "megapixels": 20.65,
+   "iso": 400,
+   "size_mb": 22.59,
+   "sha256": "08c7e7f32af01c4501a5f32ccecb7f35b8692e72566d60607e391e9f1053f4a5",
+   "url": "https://raw.pixls.us/getfile.php/1427/nice/Canon - EOS 6D - RAW (3:2).CR2",
+   "raw_pixls_us_id": 1427,
+   "licence": "CC0-1.0"
+  },
+  {
+   "role": "nikon",
+   "filename": "nikon_z6_iso100.nef",
+   "make": "Nikon",
+   "model": "Z 6",
+   "mode": "14bit 14bit compressed (3:2)",
+   "megapixels": 24.5,
+   "iso": 100,
+   "size_mb": 24.79,
+   "sha256": "8ca94584578b35a422744c1a610174ce37df0691588edfdecaec3111b3fbbb02",
+   "url": "https://raw.pixls.us/getfile.php/3581/nice/Nikon - Z 6 - 14bit 14bit compressed (3:2).NEF",
+   "raw_pixls_us_id": 3581,
+   "licence": "CC0-1.0"
+  },
+  {
+   "role": "fuji",
+   "filename": "fujifilm_x-t3_iso160.raf",
+   "make": "Fujifilm",
+   "model": "X-T3",
+   "mode": "14bit 14bit compressed (3:2)",
+   "megapixels": 26.7,
+   "iso": 160,
+   "size_mb": 26.05,
+   "sha256": "95b33021160b239ceb1a09d46a1b29cb60cb7dd47581feb126b337c219091754",
+   "url": "https://raw.pixls.us/getfile.php/2783/nice/Fujifilm - X-T3 - 14bit 14bit compressed (3:2).RAF",
+   "raw_pixls_us_id": 2783,
+   "licence": "CC0-1.0"
+  },
+  {
+   "role": "high_iso",
+   "filename": "sony_ilme-fx3_iso20000.arw",
+   "make": "Sony",
+   "model": "ILME-FX3",
+   "mode": "14bit (3:2)",
+   "megapixels": 12.21,
+   "iso": 20000,
+   "size_mb": 13.91,
+   "sha256": "394ceb1a356be8b17f18dc013bfd22895ba6ec7195f578b9be1c2fd0d5ea4773",
+   "url": "https://raw.pixls.us/getfile.php/6874/nice/Sony - ILME-FX3 - 14bit (3:2).ARW",
+   "raw_pixls_us_id": 6874,
+   "licence": "CC0-1.0"
+  },
+  {
+   "role": "high_iso_cr3",
+   "filename": "canon_eos-r50_iso32000.cr3",
+   "make": "Canon",
+   "model": "EOS R50",
+   "mode": "CRAW (3:2)",
+   "megapixels": 24,
+   "iso": 32000,
+   "size_mb": 20.81,
+   "sha256": "38fc458f2f74d0cfa04afd0ce513b40797080079f0786bedbfc55c39cc28d7d8",
+   "url": "https://raw.pixls.us/getfile.php/6645/nice/Canon - EOS R50 - CRAW (3:2).CR3",
+   "raw_pixls_us_id": 6645,
+   "licence": "CC0-1.0"
+  }
+ ]
+}

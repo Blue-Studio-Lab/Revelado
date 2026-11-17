@@ -1,0 +1,23 @@
+name: Camera / lens support
+description: Request or contribute support for a camera body or lens.
+labels: [camera-support, triage]
+body:
+  - type: input
+    id: camera
+    attributes:
+      label: Camera make and model (as in EXIF)
+      placeholder: "SONY ILCE-7M4"
+    validations: { required: true }
+  - type: input
+    id: lens
+    attributes:
+      label: Lens (as in EXIF), if relevant
+  - type: input
+    id: sample
+    attributes:
+      label: Link to a sample RAW under a permissive licence
+      description: CC0 preferred (for example raw.pixls.us). No photos of identifiable people.
+  - type: textarea
+    id: notes
+    attributes:
+      label: What goes wrong (decode, colour, noise, CA, distortion…)?

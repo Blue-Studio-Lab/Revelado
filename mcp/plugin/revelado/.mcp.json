@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "revelado": {
+      "command": "uvx",
+      "args": ["revelado-mcp"],
+      "env": {
+        "REVELADO_ALLOWED_DIRS": "${REVELADO_ALLOWED_DIRS:-}",
+        "REVELADO_EXPORT_DIRS": "${REVELADO_EXPORT_DIRS:-}",
+        "REVELADO_ENGINE_URL": "${REVELADO_ENGINE_URL:-}",
+        "REVELADO_TOKEN_FILE": "${REVELADO_TOKEN_FILE:-}"
+      }
+    }
+  }
+}

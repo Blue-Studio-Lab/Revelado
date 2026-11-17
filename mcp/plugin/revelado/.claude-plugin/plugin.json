@@ -1,0 +1,13 @@
+{
+  "name": "revelado",
+  "version": "0.1.0",
+  "description": "Drive the local Revelado RAW developer from Claude Code: technical culling, diagnostics, sample-first developing and safe exports. Works with Claude Code and Claude Desktop through MCP.",
+  "author": {
+    "name": "Jorge Luis Peña Sanchez",
+    "url": "https://github.com/bluestudiobrooks-gif"
+  },
+  "homepage": "https://github.com/Blue-Studio-Lab/Revelado",
+  "repository": "https://github.com/Blue-Studio-Lab/Revelado",
+  "license": "GPL-3.0-or-later",
+  "keywords": ["photography", "raw", "culling", "film-emulation", "mcp"]
+}

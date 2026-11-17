@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-labelledby="t">
+  <title id="t">Revelado logo (placeholder)</title>
+  <rect width="128" height="128" rx="28" fill="#1a1410"/>
+  <!-- film frame -->
+  <rect x="18" y="30" width="92" height="56" rx="4" fill="#d9a441"/>
+  <g fill="#1a1410">
+    <rect x="24" y="34" width="8" height="6" rx="1.5"/><rect x="40" y="34" width="8" height="6" rx="1.5"/>
+    <rect x="56" y="34" width="8" height="6" rx="1.5"/><rect x="72" y="34" width="8" height="6" rx="1.5"/>
+    <rect x="88" y="34" width="8" height="6" rx="1.5"/>
+    <rect x="24" y="76" width="8" height="6" rx="1.5"/><rect x="40" y="76" width="8" height="6" rx="1.5"/>
+    <rect x="56" y="76" width="8" height="6" rx="1.5"/><rect x="72" y="76" width="8" height="6" rx="1.5"/>
+    <rect x="88" y="76" width="8" height="6" rx="1.5"/>
+    <rect x="28" y="44" width="72" height="28" rx="2"/>
+  </g>
+  <!-- aperture ring -->
+  <circle cx="64" cy="58" r="10" fill="none" stroke="#f6efe4" stroke-width="4" stroke-dasharray="48 15"/>
+  <!-- tray -->
+  <path d="M16 96 L112 96 L104 112 L24 112 Z" fill="#7a2a1c"/>
+</svg>

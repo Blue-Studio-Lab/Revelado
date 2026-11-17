@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use Revelado or its technical documentation, please cite it as below."
+title: "Revelado: develop your RAW photos like a film lab"
+type: software
+authors:
+  - family-names: "Peña Sanchez"
+    given-names: "Jorge Luis"
+    alias: "bluestudiobrooks-gif"
+  - name: "Claude (Anthropic)"
+    alias: "AI co-creator"
+repository-code: "https://github.com/Blue-Studio-Lab/Revelado"
+license: GPL-3.0-or-later
+version: "0.1.0"
+date-released: "2026-11-17"
+keywords:
+  - raw-photo
+  - photography
+  - film-emulation
+  - denoising
+  - chromatic-aberration
+  - photo-culling
+abstract: >-
+  Open-source RAW developer that runs on your own computer. It provides
+  physically based colour-negative film emulation (density curves, interlayer
+  effects, grain in density space, scanner model), RAW-domain noise and
+  chromatic-aberration cleanup dosed by ISO and exposure push, technical photo
+  culling, and optional AI assistance.

@@ -1,0 +1,16 @@
+# Default owner for everything.
+*                         @bluestudiobrooks-gif
+
+# Security-sensitive paths: always need the lead maintainer's review.
+/.github/                 @bluestudiobrooks-gif
+/scripts/                 @bluestudiobrooks-gif
+/engine/pyproject.toml    @bluestudiobrooks-gif
+/apps/web/package.json    @bluestudiobrooks-gif
+/apps/web/package-lock.json @bluestudiobrooks-gif
+/SECURITY.md              @bluestudiobrooks-gif
+/GOVERNANCE.md            @bluestudiobrooks-gif
+/LICENSE                  @bluestudiobrooks-gif
+/mcp/pyproject.toml       @bluestudiobrooks-gif
+/mcp/manifest.json        @bluestudiobrooks-gif
+/mcp/plugin/              @bluestudiobrooks-gif
+/.claude-plugin/          @bluestudiobrooks-gif
