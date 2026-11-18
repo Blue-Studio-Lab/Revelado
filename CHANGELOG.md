@@ -26,7 +26,6 @@ First public **beta**. It installs from source (see the README Quick start); the
   - The web UI's lookup records cannot be polluted through the prototype.
 - Dependabot no longer proposes major-version updates. Those are migrated by hand, with tests.
 
-
 ### Added
 - Public repository scaffolding:
   - README in English and Spanish;
@@ -61,5 +60,6 @@ The first usable version from source:
 - technical cull and optional Claude cull;
 - develop sample, oven batch and export.
 
-[Unreleased]: https://github.com/Blue-Studio-Lab/Revelado/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Blue-Studio-Lab/Revelado/compare/v0.2.0-beta.1...HEAD
+[0.2.0-beta.1]: https://github.com/Blue-Studio-Lab/Revelado/releases/tag/v0.2.0-beta.1
 [0.1.0]: https://github.com/Blue-Studio-Lab/Revelado/releases/tag/v0.1.0
