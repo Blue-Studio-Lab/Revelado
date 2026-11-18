@@ -275,6 +275,21 @@ python scripts/benchmark_quality.py --only nr   # or: ca | perf
 
 You need **Python 3.12–3.14**, **Node.js 22 LTS (22.12 or newer) or 24 LTS**, **git** and **[ExifTool](https://exiftool.org)**. To develop RAW files you also need **[RawTherapee](https://rawtherapee.com) 5.10+**, with `rawtherapee-cli` on your `PATH`.
 
+> **Easiest: let Claude Code install it.** Paste this into [Claude Code](https://claude.com/claude-code) (or another agent with terminal access):
+>
+> ```text
+> Install Revelado from https://github.com/Blue-Studio-Lab/Revelado on this machine and get it running.
+> 1. Clone it into ~/Revelado (git pull if it already exists).
+> 2. Read README.md and the install page of the manual for my OS before installing anything; follow the "Quick start" exactly.
+> 3. Check prerequisites and tell me what is missing before installing: Python 3.12–3.14, Node.js 20+, git, ExifTool and RawTherapee 5.10+ (needed to develop RAW files; if missing, show me how to install the official build for my OS and wait for my confirmation).
+> 4. Install the engine in a Python virtual environment and the web UI dependencies, as the Quick start says.
+> 5. Copy engine/.env.example to engine/.env. Do not add any API key yourself: AI is optional.
+> 6. Start the engine and the UI, open the local address and check that /api/health returns ok.
+> 7. Run the engine tests (pytest) and the UI tests (npm test) and report the results.
+> 8. Only if I confirm: set up the MCP server (mcp/README.md) with access only to the photo folder I choose.
+> Do not delete or change anything outside ~/Revelado without asking. When done, tell me what you installed, the versions, and how to start and stop it.
+> ```
+
 <details open><summary><b>macOS</b></summary>
 
 ```bash
