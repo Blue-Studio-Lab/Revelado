@@ -4,6 +4,8 @@
 // proxies /api to the engine (REVELADO_ENGINE_URL) and injects the engine token,
 // so no secret ever reaches page scripts or browser storage.
 
+import { safeUrl } from './safe';
+
 export type Flag = 'pick' | 'reject' | null;
 
 export interface Health {
@@ -410,14 +412,33 @@ export const api = {
   /** Normalises an engine-relative URL (e.g. "/api/outputs/…") for use in <img>. */
   assetUrl: (u: string | null | undefined): string | null => {
     if (!u) return null;
-    if (/^(https?:|blob:|data:)/.test(u)) return u;
+    if (/^(https?:|blob:|data:)/i.test(u)) return u;
     if (u.startsWith('/api/')) return BASE + u.slice(4);
     if (u.startsWith('/')) return BASE + u;
     return `${BASE}/${u}`;
   },
 
+  /**
+   * Like assetUrl, but for URLs that end up in an href / src / window.open: only
+   * http(s) URLs on the app's own origin or on the configured engine's origin are
+   * returned; javascript:, data:, foreign hosts, etc. give undefined.
+   */
+  safeAssetUrl: (u: string | null | undefined): string | undefined => {
+    if (typeof location === 'undefined') return undefined;
+    const origins = [location.origin];
+    if (/^https?:/i.test(BASE)) {
+      try {
+        origins.push(new URL(BASE).origin);
+      } catch {
+        /* ignore a malformed override */
+      }
+    }
+    const raw = typeof u === 'string' && /^[a-z][a-z0-9+.-]*:/i.test(u.trim()) ? u : api.assetUrl(u);
+    return safeUrl(raw, location.href, origins);
+  },
+
   eventsUrl: () => {
-    if (/^https?:/.test(BASE)) return BASE.replace(/^http/, 'ws') + '/events';
+    if (/^https?:/i.test(BASE)) return BASE.replace(/^http/i, 'ws') + '/events';
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     return `${proto}//${location.host}${BASE}/events`;
   },

@@ -576,7 +576,7 @@ export function Develop() {
   }, [s.jobStatus]);
 
   const shown: SampleVersion | undefined = viewV != null ? versions.find((v) => v.v === viewV) : [...versions].reverse().find((v) => v.outputs.length);
-  const afterUrl = shown?.outputs[0] ? api.assetUrl(shown.outputs[0].web_url || shown.outputs[0].url) : null;
+  const afterUrl = shown?.outputs[0] ? (api.safeAssetUrl(shown.outputs[0].web_url || shown.outputs[0].url) ?? null) : null;
   const filmName = (id: RecipeValue) => (id === NO_FILM ? t('dark.neutral') : films.find((f) => f.id === id)?.name ?? String(id ?? '—'));
   // A finished sample approves the batch when it still matches the recipe its photo would get now.
   const approved = s.ui.samples.some((v) => v.outputs.length > 0 && v.recipeKey === recipeKey(effectiveRecipe(recipe, overrides, v.photoId)));
@@ -820,7 +820,7 @@ export function Develop() {
               );
             })}
             {shown?.outputs[0] && (
-              <a className="small-link" href={api.assetUrl(shown.outputs[0].url) ?? '#'} target="_blank" rel="noreferrer">
+              <a className="small-link" href={api.safeAssetUrl(shown.outputs[0].url) ?? '#'} target="_blank" rel="noopener noreferrer">
                 {tt('Abrir a resolución completa ↗', 'Open full resolution ↗')}
               </a>
             )}

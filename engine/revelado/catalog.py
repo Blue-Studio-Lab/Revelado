@@ -2,9 +2,14 @@
 """Persistent catalog (SQLite, WAL). Survives restarts: reopening a folder restores ratings, flags, cull results
 and developed outputs.
 
-Identity:
-  session_id = sha1(resolved folder path)[:12]          stable across restarts
-  photo_id   = sha1(session_id + relative stem key)[:16] stable for the same file inside the same folder
+Identity (opaque ids, not secrets: they only name rows and cache entries):
+  session_id = sha256(resolved folder path)[:12]          stable across restarts
+  photo_id   = sha256(session_id + relative stem key)[:16] stable for the same file inside the same folder
+
+Up to 0.1 the ids were sha1-based. Catalogs written by those versions keep their ids: opening a folder that
+already has a session row reuses that session's id, and a photo whose (session, stem key) is already catalogued
+keeps its id (see `existing_session_id` / `photo_ids`), so ratings, outputs and caches survive the switch. Only
+folders and files seen for the first time get sha256 ids.
 """
 from __future__ import annotations
 
@@ -47,11 +52,11 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 
 def session_id_for(path: Path) -> str:
-    return hashlib.sha1(str(path.resolve()).encode()).hexdigest()[:12]
+    return hashlib.sha256(str(path.resolve()).encode()).hexdigest()[:12]
 
 
 def photo_id_for(session_id: str, stem_key: str) -> str:
-    return hashlib.sha1(f"{session_id}:{stem_key}".encode()).hexdigest()[:16]
+    return hashlib.sha256(f"{session_id}:{stem_key}".encode()).hexdigest()[:16]
 
 
 class Catalog:
@@ -106,6 +111,11 @@ class Catalog:
                       "name=excluded.name", (sid, str(path), name, count, now, now))
         return existed
 
+    def existing_session_id(self, path: Path) -> str | None:
+        """Id of the session already catalogued for this folder (whatever hash it was minted with), if any."""
+        r = self.q1("SELECT session_id FROM sessions WHERE path=? ORDER BY opened_at DESC LIMIT 1", (str(path),))
+        return r["session_id"] if r else None
+
     def session(self, sid: str) -> sqlite3.Row | None:
         return self.q1("SELECT * FROM sessions WHERE session_id=?", (sid,))
 
@@ -131,6 +141,10 @@ class Catalog:
 
     def photos(self, sid: str) -> list[sqlite3.Row]:
         return self.q("SELECT * FROM photos WHERE session_id=? AND present=1 ORDER BY capture_ts, name", (sid,))
+
+    def photo_ids(self, sid: str) -> dict[str, str]:
+        """stem_key -> photo id already catalogued in this session (keeps legacy ids stable)."""
+        return {r["stem_key"]: r["id"] for r in self.q("SELECT stem_key, id FROM photos WHERE session_id=?", (sid,))}
 
     def known_mtimes(self, sid: str) -> dict[str, tuple[float, str]]:
         return {r["stem_key"]: (r["mtime"], r["meta_json"]) for r in

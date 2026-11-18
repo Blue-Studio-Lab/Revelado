@@ -35,7 +35,8 @@ jobs:
           missing=0
           for c in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
             author_email="$(git log -1 --format='%ae' "$c")"
-            if ! git log -1 --format='%B' "$c" | grep -qiE "^Signed-off-by: .+ <${author_email}>$"; then
+            # match the e-mail literally: noreply addresses contain '+', which is a regex operator
+            if ! git log -1 --format='%B' "$c" | grep -i '^Signed-off-by: ' | grep -qiF "<${author_email}>"; then
               echo "::error::Commit $(git log -1 --format='%h %s' "$c") has no Signed-off-by matching its author (${author_email})."
               missing=1
             fi

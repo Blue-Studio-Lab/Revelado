@@ -46,6 +46,11 @@ export function Oven() {
   const pct = Math.round((job?.progress ?? 0) * 100);
   const nameOf = (id: string) => s.photoById(id)?.name ?? id;
   const outputs = job?.outputs ?? [];
+  // re-validated at the sink: only same-origin / engine-origin http(s) URLs
+  const previewUrl = api.safeAssetUrl(preview);
+  const isExport = tracked.kind === 'export';
+  // an export job reports progress in items_done before its outputs list is filled
+  const finishedCount = Math.max(outputs.length, isExport ? done : 0);
 
   const stop = async () => {
     setConfirmStop(false);
@@ -64,9 +69,9 @@ export function Oven() {
           <h1 className="title">
             {t(kindKey(String(tracked.kind)) as 'oven.kind.batch')} ·{' '}
             {isActive
-              ? t('oven.title', { i: Math.min(done + 1, Math.max(total, 1)), n: total || '?' })
+              ? t(isExport ? 'oven.title.export' : 'oven.title', { i: Math.min(done + 1, Math.max(total, 1)), n: total || '?' })
               : job?.state === 'done'
-                ? t('oven.done', { n: done })
+                ? t(isExport ? 'oven.done.export' : 'oven.done', { n: done })
                 : job?.state === 'cancelled'
                   ? tt('Detenido · {n} terminadas', 'Stopped · {n} finished', { n: done })
                   : job?.state === 'error'
@@ -132,13 +137,13 @@ export function Oven() {
           </InlineAlert>
         )}
 
-        <h2 className="heading">{t('oven.finished', { n: outputs.length })}</h2>
+        <h2 className="heading">{t(isExport ? 'oven.finished.export' : 'oven.finished', { n: finishedCount })}</h2>
         {outputs.length === 0 ? (
           <p className="muted">{isActive ? tt('Las fotos aparecerán aquí a medida que terminen.', 'Photos appear here as they finish.') : '—'}</p>
         ) : (
           <div className="oven-grid">
             {outputs.map((o, i) => {
-              const web = api.assetUrl(o.web_url || o.url);
+              const web = api.safeAssetUrl(o.web_url || o.url);
               return (
                 <figure key={`${o.photo_id}-${i}`} className="oven-cell">
                   {web ? (
@@ -213,11 +218,11 @@ export function Oven() {
           <p>{tt('¿Detener el lote? Se para entre fotos: la foto en curso termina y las terminadas se conservan.', 'Stop the batch? It stops between photos: the current photo finishes and finished photos are kept.')}</p>
         </Dialog>
       )}
-      {preview && (
+      {previewUrl && (
         <Dialog title={t('oven.openResult')} onClose={() => setPreview(null)} wide>
-          <img className="oven-preview" src={preview} alt="" />
+          <img className="oven-preview" src={previewUrl} alt="" />
           <p>
-            <a href={preview} target="_blank" rel="noreferrer">
+            <a href={previewUrl} target="_blank" rel="noopener noreferrer">
               {tt('Abrir en otra pestaña ↗', 'Open in a new tab ↗')}
             </a>
           </p>

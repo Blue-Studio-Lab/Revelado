@@ -479,13 +479,13 @@ export function Viewer({ id }: { id: string | null }) {
                 <ul className="output-list">
                   {outputs.map((o) => (
                     <li key={o.output_id}>
-                      <a href={api.assetUrl(o.web_url) ?? '#'} target="_blank" rel="noreferrer">
-                        <img src={api.assetUrl(o.web_url) ?? ''} alt="" loading="lazy" />
+                      <a href={api.safeAssetUrl(o.web_url) ?? '#'} target="_blank" rel="noopener noreferrer">
+                        <img src={api.safeAssetUrl(o.web_url) ?? ''} alt="" loading="lazy" />
                       </a>
                       <span className="muted">
                         {String(o.recipe?.film ?? '—')} · {o.created_at ? (typeof o.created_at === 'number' ? new Date(o.created_at * 1000).toISOString() : String(o.created_at)).slice(0, 16).replace('T', ' ') : ''}
                       </span>
-                      <a href={api.assetUrl(o.url) ?? '#'} target="_blank" rel="noreferrer">
+                      <a href={api.safeAssetUrl(o.url) ?? '#'} target="_blank" rel="noopener noreferrer">
                         {tt('Completo ↗', 'Full ↗')}
                       </a>
                     </li>
