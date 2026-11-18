@@ -14,6 +14,10 @@ from pathlib import Path
 import pytest
 
 from revelado.errors import ReveladoError
+from revelado.tools import find_tool
+
+# On Windows every non-system drive is an export root, so tmp_path/outside is not "outside" there.
+_POSIX_ROOTS = pytest.mark.skipif(os.name == "nt", reason="Windows allow-lists whole drives")
 
 
 # ------------------------------------------------------------------------------------------------ export destination
@@ -52,6 +56,7 @@ def test_export_dest_rejects_nul_control_and_dotdot(tmp_path, roots, bad):
     assert ei.value.status == 400
 
 
+@_POSIX_ROOTS
 def test_export_dest_outside_allowed_roots_is_rejected(tmp_path, roots):
     from revelado.develop import validate_dest
     with pytest.raises(ReveladoError):
@@ -75,6 +80,7 @@ def test_export_roots_env_extends_allow_list(tmp_path, roots, monkeypatch):
     assert d == (roots.outside / "entrega").resolve() and d.is_dir()
 
 
+@_POSIX_ROOTS
 def test_mcp_export_dirs_are_honoured_by_the_engine(tmp_path, roots, monkeypatch):
     """A folder the MCP server allows (REVELADO_EXPORT_DIRS) must not then be refused by the engine."""
     from revelado.develop import validate_dest
@@ -85,6 +91,7 @@ def test_mcp_export_dirs_are_honoured_by_the_engine(tmp_path, roots, monkeypatch
         validate_dest(_ctx(tmp_path), str(roots.outside / "c"), [{"session_id": "s"}])
 
 
+@_POSIX_ROOTS
 def test_export_root_prefix_is_not_a_sibling_match(tmp_path, roots, monkeypatch):
     """'<root>2' is not inside '<root>'."""
     from revelado.develop import validate_dest
@@ -237,6 +244,7 @@ def test_new_ids_are_sha256(tmp_path):
     assert photo_id_for(sid, "img_0001") == hashlib.sha256(f"{sid}:img_0001".encode()).hexdigest()[:16]
 
 
+@pytest.mark.skipif(find_tool("exiftool") is None, reason="needs exiftool to scan the folder")
 def test_legacy_sha1_ids_survive_reopen(settings, jpg_only_folder):
     """A catalog written with the old sha1 ids keeps its session/photo ids (and the user's ratings) on reopen."""
     from revelado import library

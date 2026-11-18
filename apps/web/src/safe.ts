@@ -58,6 +58,8 @@ export function withEntry<V>(rec: Record<string, V>, key: unknown, value: V): Re
   for (const k of Object.keys(rec)) {
     if (isSafeKey(k)) Object.defineProperty(out, k, { value: rec[k], enumerable: true, writable: true, configurable: true });
   }
+  // explicit guard at the write site (prototype-polluting names never reach the null-prototype record)
+  if (key === '__proto__' || key === 'constructor' || key === 'prototype') return rec;
   Object.defineProperty(out, key, { value, enumerable: true, writable: true, configurable: true });
   return out;
 }
