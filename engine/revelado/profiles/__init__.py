@@ -41,22 +41,51 @@ def _tokens(s: str) -> list[str]:
     return _norm_lens(s).split(" ")
 
 
+_APSC_MODELS = re.compile(
+    r"(ilce-[3-6]\d{3}|zv-e10|nex-|slt-a[3-7]\d|"           # Sony APS-C
+    r"eos (\d{2,4}d|rebel|kiss|m\d*|r7|r10|r50|r100)\b|"    # Canon APS-C
+    r"\bd[357]\d{3}\b|\bd500\b|\bz ?(50|fc|30)\b|"         # Nikon DX
+    r"x-(t|e|s|h|pro|a|m)\d|x100|"                          # Fujifilm X
+    r"pentax k-?(3|5|7|70|s|r|01)|k-3|kp\b)", re.I)
+_M43_MODELS = re.compile(r"(dc-g|dmc-g|dc-gh|dc-gx|e-m\d|om-\d|e-p\d|e-pl)", re.I)
+
+
+def sensor_format(meta: dict) -> str:
+    cf = meta.get("crop_factor")
+    if not cf and meta.get("focal35") and meta.get("focal"):
+        cf = meta["focal35"] / max(meta["focal"], 1e-6)
+    if cf:
+        if cf < 0.9:
+            return "medium-format"
+        if cf < 1.2:
+            return "full-frame"
+        if cf < 1.75:
+            return "aps-c"
+        if cf < 2.3:
+            return "m43"
+        return "1in"
+    name = f"{meta.get('make') or ''} {meta.get('model') or ''}"
+    if _APSC_MODELS.search(name):
+        return "aps-c"
+    if _M43_MODELS.search(name):
+        return "m43"
+    return "unknown"
+
+
 def resolve_camera(meta: dict) -> dict:
     make, model = (meta.get("make") or ""), (meta.get("model") or "")
     for c in seed()["cameras"]:
         names = [c["model"].lower()] + [a.lower() for a in c.get("aliases", [])]
         if make.lower() == c["maker"].lower() and model.lower() in names:
             return {**c, "source": "revelado-db", "confidence": 0.85, "matched_by": "make+model"}
-    # generic class
-    fmt = "full-frame"
-    w = meta.get("width") or 0
-    if w and w < 5000 and (meta.get("focal35") and meta.get("focal")
-                           and meta["focal35"] / max(meta["focal"], 1e-6) > 1.4):
-        fmt = "aps-c"
-    g = seed()["generic"]["sensor_by_format"][fmt]
+    # generic class: from the crop factor (EXIF ScaleFactor35efl, or 35 mm-equivalent / real focal),
+    # else from well-known APS-C / M4/3 model names; "unknown" rather than guessing full-frame.
+    fmt = sensor_format(meta)
+    g = seed()["generic"]["sensor_by_format"].get(fmt, {})
     key = f"{make.lower()}/{model.lower().replace(' ', '-')}" if make or model else "unknown"
-    return {"key": key, "maker": make or None, "model": model or None, "sensor": {"format": fmt, "width_mm": g["width_mm"]},
-            "source": "generic", "confidence": 0.3, "matched_by": "sensor-class",
+    return {"key": key, "maker": make or None, "model": model or None,
+            "sensor": {"format": fmt, "width_mm": g.get("width_mm")},
+            "source": "generic", "confidence": 0.3 if fmt != "unknown" else 0.1, "matched_by": "sensor-class",
             "license": None, "notes": "Cámara sin perfil curado: valores genéricos por formato de sensor."}
 
 

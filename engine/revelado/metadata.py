@@ -23,11 +23,12 @@ from .log import get_logger
 log = get_logger("metadata")
 # Bump when normalise() changes what it extracts: catalog rows written by an older version are re-read on next open.
 # 2: width/height prefer DefaultCropSize (a DNG's ExifImageWidth can describe a small preview, not the sensor)
-META_VERSION = 2
+# 3: camera name without duplicated maker ("Canon Canon EOS 800D"); ScaleFactor35efl for sensor class
+META_VERSION = 3
 
 TAGS = [
     "Make", "Model", "LensModel", "LensType2#", "LensID", "LensSpec", "LensMake",
-    "ISO#", "FocalLength#", "FocalLengthIn35mmFormat#", "FNumber#", "ExposureTime#", "ExposureCompensation#",
+    "ISO#", "FocalLength#", "FocalLengthIn35mmFormat#", "ScaleFactor35efl#", "FNumber#", "ExposureTime#", "ExposureCompensation#",
     "DateTimeOriginal", "SubSecTimeOriginal", "OffsetTimeOriginal",
     "PictureProfile", "CreativeStyle", "WhiteBalance", "MeteringMode", "ExposureProgram", "Flash",
     "ExifImageWidth#", "ExifImageHeight#", "ImageWidth#", "ImageHeight#", "DefaultCropSize#", "Orientation#",
@@ -103,6 +104,14 @@ def _crop_size(v: Any) -> tuple[float | None, float | None]:
     return None, None
 
 
+def camera_name(make: str | None, model: str | None) -> str | None:
+    """'Canon' + 'Canon EOS 800D' -> 'Canon EOS 800D'; 'Sony' + 'ILCE-7M4' -> 'Sony ILCE-7M4'."""
+    make, model = (make or "").strip(), (model or "").strip()
+    if make and model and model.lower().startswith(make.lower()):
+        return make + model[len(make):]
+    return " ".join(x for x in (make, model) if x) or None
+
+
 def shutter_str(t: float | None) -> str | None:
     if not t:
         return None
@@ -167,10 +176,11 @@ def normalise(raw: dict, salt: str) -> dict:
         except ValueError:
             pass
     return {
-        "make": make, "model": model, "camera": " ".join(x for x in (make, model) if x) or None,
+        "make": make, "model": model, "camera": camera_name(make, model),
         "lens": lens, "lens_type2": raw.get("LensType2"), "lens_id": raw.get("LensID"),
         "iso": _num(raw.get("ISO")), "focal": _num(raw.get("FocalLength")),
-        "focal35": _num(raw.get("FocalLengthIn35mmFormat")), "aperture": _num(raw.get("FNumber")),
+        "focal35": _num(raw.get("FocalLengthIn35mmFormat")), "crop_factor": _num(raw.get("ScaleFactor35efl")),
+        "aperture": _num(raw.get("FNumber")),
         "exposure_time": t, "shutter": shutter_str(t), "exposure_comp": _num(raw.get("ExposureCompensation")),
         "datetime": dt_iso, "capture_ts": ts, "offset": raw.get("OffsetTimeOriginal"),
         "picture_profile": pp, "is_log": pp in LOG_PROFILES,

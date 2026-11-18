@@ -46,6 +46,9 @@ export function Oven() {
   const pct = Math.round((job?.progress ?? 0) * 100);
   const nameOf = (id: string) => s.photoById(id)?.name ?? id;
   const outputs = job?.outputs ?? [];
+  const isExport = tracked.kind === 'export';
+  // an export job reports progress in items_done before its outputs list is filled
+  const finishedCount = Math.max(outputs.length, isExport ? done : 0);
 
   const stop = async () => {
     setConfirmStop(false);
@@ -64,9 +67,9 @@ export function Oven() {
           <h1 className="title">
             {t(kindKey(String(tracked.kind)) as 'oven.kind.batch')} ·{' '}
             {isActive
-              ? t('oven.title', { i: Math.min(done + 1, Math.max(total, 1)), n: total || '?' })
+              ? t(isExport ? 'oven.title.export' : 'oven.title', { i: Math.min(done + 1, Math.max(total, 1)), n: total || '?' })
               : job?.state === 'done'
-                ? t('oven.done', { n: done })
+                ? t(isExport ? 'oven.done.export' : 'oven.done', { n: done })
                 : job?.state === 'cancelled'
                   ? tt('Detenido · {n} terminadas', 'Stopped · {n} finished', { n: done })
                   : job?.state === 'error'
@@ -132,7 +135,7 @@ export function Oven() {
           </InlineAlert>
         )}
 
-        <h2 className="heading">{t('oven.finished', { n: outputs.length })}</h2>
+        <h2 className="heading">{t(isExport ? 'oven.finished.export' : 'oven.finished', { n: finishedCount })}</h2>
         {outputs.length === 0 ? (
           <p className="muted">{isActive ? tt('Las fotos aparecerán aquí a medida que terminen.', 'Photos appear here as they finish.') : '—'}</p>
         ) : (
