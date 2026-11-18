@@ -74,7 +74,7 @@ def build_ctx(settings: Settings | None = None) -> Ctx:
         try:
             tp.parent.mkdir(parents=True, exist_ok=True)
             fd = os.open(tp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-            with os.fdopen(fd, "w") as fh:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="") as fh:      # exact bytes, no CRLF translation
                 fh.write(token)
             os.chmod(tp, 0o600)
         except OSError:

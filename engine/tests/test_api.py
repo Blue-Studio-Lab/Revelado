@@ -4,6 +4,7 @@ folders, develop policy (RAW needed unless develop_source='jpg'), an end-to-end 
 real worker subprocess, presets."""
 from __future__ import annotations
 
+import os
 import time
 
 import pytest
@@ -41,10 +42,13 @@ def test_health_capabilities_and_tokens(client, settings):
     tok = appmod.CTX.token
     assert client.get("/api/health", headers={"X-Revelado-Token": "nope"}).status_code == 401
     assert client.get("/api/health", headers={"X-Revelado-Token": tok}).status_code == 200
-    # runtime token also written to the per-user state folder, mode 0600
+    # runtime token also written to the per-user state folder, mode 0600 (POSIX only: Windows has no mode bits,
+    # access there is governed by the per-user profile ACLs)
     up = settings.user_token_path
-    assert up.read_text() == tok and (up.stat().st_mode & 0o777) == 0o600
-    assert settings.runtime_token_path.read_text() == tok
+    assert up.read_text(encoding="utf-8").strip() == tok
+    if os.name != "nt":
+        assert (up.stat().st_mode & 0o777) == 0o600
+    assert settings.runtime_token_path.read_text(encoding="utf-8").strip() == tok
 
 
 def test_presets_default_is_neutral(client):

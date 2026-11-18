@@ -15,6 +15,7 @@ from PIL import Image
 from conftest import raw_file, synthetic_scene
 from revelado.errors import ReveladoError
 from revelado.imaging import ImageStore
+from revelado.tools import find_tool
 
 # sensor (unrotated) 600x400; orientation 6 = portrait, displayed 400x600
 SENSOR_W, SENSOR_H = 600, 400
@@ -105,6 +106,7 @@ def test_jpg_only_smaller_than_exif_is_upscaled_and_says_so(tmp_path):
     assert box["source"] == "camera_jpg" and box["upscaled"] and box["scale"] == 0.5
 
 
+@pytest.mark.skipif(find_tool("exiftool") is None, reason="exiftool no instalado (library/open lo necesita)")
 def test_crop_endpoint_reports_source(tmp_path, settings, jpg_only_folder):
     from fastapi.testclient import TestClient
     from revelado.api import app as appmod
@@ -112,7 +114,9 @@ def test_crop_endpoint_reports_source(tmp_path, settings, jpg_only_folder):
     try:
         with TestClient(appmod.app) as c:
             c.headers["X-Revelado-Token"] = appmod.CTX.token
-            sid = c.post("/api/library/open", json={"path": str(jpg_only_folder)}).json()["session_id"]
+            r = c.post("/api/library/open", json={"path": str(jpg_only_folder)})
+            assert r.status_code == 200, r.text
+            sid = r.json()["session_id"]
             p = c.get("/api/photos", params={"session_id": sid}).json()[0]
             r = c.get(f"/api/photos/{p['id']}/crop", params=dict(x=10, y=20, w=100, h=80))
             assert r.status_code == 200 and r.headers["x-preview-source"] == "camera_jpg"
@@ -132,7 +136,9 @@ def _fake_ctx(tmp_path):
 
 def test_export_dest_expands_home(tmp_path, monkeypatch):
     from revelado.develop import validate_dest
+    # Path.expanduser() reads HOME on POSIX and USERPROFILE on Windows: point both at the temp dir.
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
     rows = [{"session_id": "s"}]
     d = validate_dest(_fake_ctx(tmp_path), "~/revelado-demo/raws_Entrega", rows)
     assert d == (tmp_path / "revelado-demo" / "raws_Entrega").resolve() and d.is_dir()
