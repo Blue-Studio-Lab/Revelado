@@ -26,8 +26,8 @@ Physical film emulation, ISO-aware noise reduction, chromatic-aberration correct
 ---
 
 <p align="center">
-  <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4"><img src="docs/assets/demo-poster.jpg" alt="Revelado demo and tutorial video (English, 3:42). Click to play." width="720"></a>
-  <br><sub>Click the image to watch the demo (MP4, 157 MB) · <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1">release page with credits</a></sub>
+  <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v2/revelado-demo-en.mp4"><img src="docs/assets/demo-poster.jpg" alt="Revelado demo and tutorial video (English, 3:43). Click to play." width="720"></a>
+  <br><sub>Click the image to watch the demo (MP4, 160 MB) · <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v2">release page with credits</a></sub>
 </p>
 
 ## Contents
@@ -359,7 +359,7 @@ What leaves your machine when you opt in: downscaled JPEG previews (≤ 1024 px,
 
 ## Demo
 
-**[Watch the demo and tutorial (English, 3:42, 1920×1080)](https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4)**: the MP4 is attached to the [`demo-video-v1` release](https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1) because GitHub does not store files over 100 MB in the repository.
+**[Watch the demo and tutorial (English, 3:43, 1920×1080)](https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v2/revelado-demo-en.mp4)**: the MP4 is attached to the [`demo-video-v2` release](https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v2) because GitHub does not store files over 100 MB in the repository.
 
 It shows the whole flow on real RAW files from Sony, Canon, Panasonic, Nikon and Pentax cameras:
 1. Open a folder; RAW and JPG files are paired.
