@@ -15,6 +15,9 @@ updates:
       python-minor-patch:
         update-types: [minor, patch]
     commit-message: { prefix: "build(engine)" }
+    ignore:   # major versions are migrated by hand in their own branch, with tests
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
   - package-ecosystem: pip
     directory: /mcp
@@ -24,6 +27,9 @@ updates:
       mcp-minor-patch:
         update-types: [minor, patch]
     commit-message: { prefix: "build(mcp)" }
+    ignore:   # major versions are migrated by hand in their own branch, with tests
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
   - package-ecosystem: npm
     directory: /apps/web
@@ -33,4 +39,7 @@ updates:
       web-minor-patch:
         update-types: [minor, patch]
     commit-message: { prefix: "build(web)" }
+    ignore:   # major versions are migrated by hand in their own branch, with tests
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 5
