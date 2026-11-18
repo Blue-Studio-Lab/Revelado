@@ -281,7 +281,7 @@ Necesitas **Python 3.12–3.14**, **Node.js 22 LTS (22.12 o superior) o 24 LTS**
 > Instala Revelado desde https://github.com/Blue-Studio-Lab/Revelado en este equipo y déjalo funcionando.
 > 1. Clónalo en ~/Revelado (si ya existe, haz git pull).
 > 2. Lee README.es.md y la página de instalación del manual para mi sistema antes de instalar nada; sigue exactamente el "Inicio rápido".
-> 3. Comprueba los requisitos y dime qué falta antes de instalar: Python 3.12–3.14, Node.js 20 o superior, git, ExifTool y RawTherapee 5.10 o superior (hace falta para revelar RAW; si falta, enséñame cómo instalar la versión oficial para mi sistema y espera a que te confirme).
+> 3. Comprueba los requisitos y dime qué falta antes de instalar: Python 3.12–3.14, Node.js 22.12 o superior (o 24 LTS), git, ExifTool y RawTherapee 5.10 o superior (hace falta para revelar RAW; si falta, enséñame cómo instalar la versión oficial para mi sistema y espera a que te confirme).
 > 4. Instala el motor en un entorno virtual de Python y las dependencias de la interfaz, como indica el Inicio rápido.
 > 5. Copia engine/.env.example a engine/.env. No pongas ninguna API key por tu cuenta: la IA es opcional.
 > 6. Arranca el motor y la interfaz, abre la dirección local y comprueba que /api/health responde ok.

@@ -281,7 +281,7 @@ You need **Python 3.12–3.14**, **Node.js 22 LTS (22.12 or newer) or 24 LTS**, 
 > Install Revelado from https://github.com/Blue-Studio-Lab/Revelado on this machine and get it running.
 > 1. Clone it into ~/Revelado (git pull if it already exists).
 > 2. Read README.md and the install page of the manual for my OS before installing anything; follow the "Quick start" exactly.
-> 3. Check prerequisites and tell me what is missing before installing: Python 3.12–3.14, Node.js 20+, git, ExifTool and RawTherapee 5.10+ (needed to develop RAW files; if missing, show me how to install the official build for my OS and wait for my confirmation).
+> 3. Check prerequisites and tell me what is missing before installing: Python 3.12–3.14, Node.js 22.12+ or 24 LTS, git, ExifTool and RawTherapee 5.10+ (needed to develop RAW files; if missing, show me how to install the official build for my OS and wait for my confirmation).
 > 4. Install the engine in a Python virtual environment and the web UI dependencies, as the Quick start says.
 > 5. Copy engine/.env.example to engine/.env. Do not add any API key yourself: AI is optional.
 > 6. Start the engine and the UI, open the local address and check that /api/health returns ok.
