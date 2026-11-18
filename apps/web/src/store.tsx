@@ -31,6 +31,7 @@ import {
 import { canDevelop, engineCaps, type EngineCaps } from './capabilities';
 import { I18nProvider, makeI18n } from './i18n';
 import { loadPrefs, savePrefs, type Prefs } from './prefs';
+import { emptyRecord, getEntry, isSafeKey, withEntry } from './safe';
 import { readItem, sessionKey, writeItem } from './storage';
 
 // ───────────────────────── types
@@ -343,7 +344,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   // ── jobs
-  const [jobStatus, setJobStatus] = useState<Record<string, Job | null>>({});
+  const [jobStatus, setJobStatus] = useState<Record<string, Job | null>>(() => emptyRecord<Job | null>());
   const jobStatusRef = useRef(jobStatus);
   jobStatusRef.current = jobStatus;
 
@@ -370,12 +371,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const refreshJob = useCallback(async (id: string) => {
     try {
       const j = await api.job(id);
-      const prev = jobStatusRef.current[id];
-      setJobStatus((s) => ({ ...s, [id]: j }));
+      const prev = getEntry(jobStatusRef.current, id);
+      setJobStatus((s) => withEntry(s, id, j));
       if (prev && ACTIVE(prev.state) && !ACTIVE(j.state)) onJobFinishedRef.current(id, j);
       return j;
     } catch (e) {
-      if (e instanceof ApiError && e.status === 404) setJobStatus((s) => ({ ...s, [id]: null }));
+      if (e instanceof ApiError && e.status === 404) setJobStatus((s) => withEntry<Job | null>(s, id, null));
       return null;
     }
   }, []);
@@ -383,7 +384,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const trackJob = useCallback(
     (j: TrackedJob) => {
       setUi((u) => ({ jobs: [...u.jobs.filter((x) => x.id !== j.id), j] }));
-      setJobStatus((s) => ({ ...s, [j.id]: { state: 'queued', progress: 0, stage: null, eta_s: null, outputs: [], log: [], kind: j.kind } }));
+      setJobStatus((s) => withEntry<Job | null>(s, j.id, { state: 'queued', progress: 0, stage: null, eta_s: null, outputs: [], log: [], kind: j.kind }));
       setTimeout(() => refreshJob(j.id), 300);
     },
     [setUi, refreshJob],
@@ -393,7 +394,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!session) return;
     ui.jobs.forEach((j) => {
-      if (!(j.id in jobStatusRef.current)) refreshJob(j.id);
+      if (getEntry(jobStatusRef.current, j.id) === undefined) refreshJob(j.id);
     });
     api
       .jobs(true)
@@ -401,7 +402,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         list.forEach((j) => {
           if (!j.job_id) return;
           const known = ui.jobs.some((t) => t.id === j.job_id);
-          setJobStatus((s) => ({ ...s, [j.job_id as string]: j }));
+          setJobStatus((s) => withEntry<Job | null>(s, j.job_id, j));
           if (!known)
             setUi((u) => ({
               jobs: [...u.jobs, { id: j.job_id as string, kind: j.kind ?? 'batch', label: String(j.kind ?? 'job'), createdAt: Date.now() }],
@@ -442,26 +443,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           return;
         }
         if (ev.type === 'job_progress') {
+          if (!isSafeKey(ev.job_id)) return;
           setJobStatus((s) => {
-            const prev = s[ev.job_id] ?? { state: 'running', progress: 0, stage: null, eta_s: null, outputs: [], log: [] };
-            return {
-              ...s,
-              [ev.job_id]: {
-                ...prev,
-                state: 'running',
-                progress: ev.progress ?? prev.progress,
-                stage: ev.stage ?? prev.stage,
-                eta_s: ev.eta_s ?? prev.eta_s,
-              } as Job,
-            };
+            const prev = getEntry(s, ev.job_id) ?? { state: 'running', progress: 0, stage: null, eta_s: null, outputs: [], log: [] };
+            return withEntry<Job | null>(s, ev.job_id, {
+              ...prev,
+              state: 'running',
+              progress: ev.progress ?? prev.progress,
+              stage: ev.stage ?? prev.stage,
+              eta_s: ev.eta_s ?? prev.eta_s,
+            } as Job);
           });
         } else if (ev.type === 'job_done') {
           refreshJob(ev.job_id);
         } else if (ev.type === 'job_log') {
+          if (!isSafeKey(ev.job_id)) return;
           setJobStatus((s) => {
-            const prev = s[ev.job_id];
+            const prev = getEntry(s, ev.job_id);
             if (!prev) return s;
-            return { ...s, [ev.job_id]: { ...prev, log: [...(prev.log ?? []), ev.line].slice(-400) } };
+            return withEntry<Job | null>(s, ev.job_id, { ...prev, log: [...(prev.log ?? []), ev.line].slice(-400) });
           });
         } else if (ev.type === 'photo_updated') {
           const patch: Partial<Photo> = {};

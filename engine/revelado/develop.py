@@ -5,7 +5,10 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import stat
 import subprocess
+import sys
+import tempfile
 import time
 import uuid
 from pathlib import Path
@@ -110,7 +113,8 @@ def _place(tmp: Path, dest: Path, base: str, ext: str) -> Path:
         except OSError:
             # filesystems without hard links: fall back to exclusive create + copy
             try:
-                fd = os.open(cand, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+                # same permission bits the hard-link branch would give (the temp file's own, i.e. the umask's)
+                fd = os.open(cand, os.O_WRONLY | os.O_CREAT | os.O_EXCL, stat.S_IMODE(os.stat(tmp).st_mode))
             except FileExistsError:
                 n += 1
                 continue
@@ -131,25 +135,113 @@ def _exif(exiftool: str | None, raw: str | None, dst: Path, w: int, h: int) -> s
     return None if r.returncode == 0 and r2.returncode == 0 else (r.stderr + r2.stderr)[-200:]
 
 
+def export_roots() -> list[str]:
+    """Folders an export may be written into (real paths, no trailing separator). Defaults: the user's home, the
+    temp folder, shared folders and the usual mount points for external disks / NAS shares of each OS (macOS
+    /Volumes and /Users/Shared; Linux /media, /mnt, /run/media, /run/user/<uid> (GVFS/SMB), /srv, /data; Windows
+    every drive letter and UNC shares, minus the system folders). REVELADO_EXPORT_ROOTS and the MCP server's
+    REVELADO_EXPORT_DIRS (both os.pathsep-separated) add more. Exports never go to the engine cache or the
+    originals (checked in validate_dest)."""
+    from .config import env_value
+    cands: list[str] = [str(Path.home()), tempfile.gettempdir()]
+    if sys.platform == "darwin":
+        cands += ["/Volumes", "/Users/Shared"]
+    elif sys.platform == "win32":
+        cands += [f"{c}:\\" for c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"] + ["\\\\"]   # drives + \\server\share
+    else:
+        cands += ["/media", "/mnt", "/run/media", "/srv", "/data"]
+        if hasattr(os, "getuid"):
+            cands.append(f"/run/user/{os.getuid()}")                  # GVFS/SMB mounts of this user
+    for key in ("REVELADO_EXPORT_ROOTS", "REVELADO_EXPORT_DIRS"):
+        cands += [x for x in env_value(key).split(os.pathsep) if x.strip()]
+    out: list[str] = []
+    for c in cands:
+        c = c.strip()
+        if c == "\\\\":                                  # UNC shares: kept as the bare "\\\\" prefix
+            r = c
+        else:
+            try:
+                r = os.path.realpath(os.path.expanduser(c))
+            except (OSError, ValueError):
+                continue
+            r = r.rstrip("/\\") or r[:1]             # "/" stays "/" (only reachable via an env setting)
+        if r and r not in out:
+            out.append(r)
+    return out
+
+
+def _system_dirs() -> list[str]:
+    """Folders inside an export root that still must never receive exports (Windows system drive)."""
+    if sys.platform != "win32":
+        return []
+    out = []
+    for var, default in (("SystemRoot", "C:\\Windows"), ("ProgramFiles", "C:\\Program Files"),
+                         ("ProgramFiles(x86)", "C:\\Program Files (x86)"), ("ProgramData", "C:\\ProgramData")):
+        v = os.environ.get(var) or default
+        out.append(os.path.realpath(v).rstrip("\\/"))
+    return out
+
+
+def _fold(p: str) -> str:
+    """Comparison key for a path: case-insensitive where the usual filesystem is (Windows, macOS)."""
+    p = os.path.normcase(p)
+    return p.lower() if sys.platform == "darwin" else p
+
+
+def _prefix(root: str) -> str:
+    return root if root.endswith(("/", "\\")) else root + os.sep
+
+
+def _inside(path: str, root: str) -> bool:
+    """path == root or below it, compared with _fold (case-insensitive on macOS/Windows)."""
+    fp, fr = _fold(path), _fold(root)
+    return fp == fr or fp.startswith(_fold(_prefix(root)))
+
+
 def validate_dest(ctx, dest: str, photo_rows: list[dict]) -> Path:
     if not dest or not isinstance(dest, str):
         raise ReveladoError("E_BAD_INPUT", "falta 'dest_dir'")
     dest = dest.strip()
+    if "\x00" in dest or any(ord(ch) < 32 for ch in dest):
+        raise ReveladoError("E_BAD_INPUT", "dest_dir contiene caracteres no válidos")
     if dest.startswith("~") and dest != "~" and not dest.startswith("~/"):
         raise ReveladoError("E_BAD_INPUT", "dest_dir: solo se admite '~/' (tu carpeta personal), no '~usuario'")
-    d = Path(dest).expanduser()                           # "~/Entrega" -> /Users/<you>/Entrega
-    if not d.is_absolute():
+    expanded = os.path.expanduser(dest)                   # "~/Entrega" -> /Users/<you>/Entrega
+    if not os.path.isabs(expanded):
         raise ReveladoError("E_BAD_INPUT", "dest_dir debe ser una ruta absoluta")
-    d = d.resolve()
-    cache = ctx.settings.cache_dir
-    if d == cache or cache in d.parents:
+    if expanded.startswith(("\\\\?", "\\\\.", "//?", "//.")):        # Windows device / verbatim paths
+        raise ReveladoError("E_BAD_INPUT", "dest_dir no admite rutas de dispositivo (\\\\?\\ o \\\\.\\)")
+    if ".." in Path(expanded).parts:
+        raise ReveladoError("E_BAD_INPUT", "dest_dir no puede contener '..'")
+    real = os.path.realpath(expanded)                     # symlinks resolved: no escape through a link
+    if real.startswith(("\\\\?\\", "\\\\.\\")):                  # a link resolved to a device / verbatim path
+        raise ReveladoError("E_BAD_INPUT", "dest_dir no admite rutas de dispositivo")
+    # Containment: find the export root (case-insensitively where the filesystem is), adopt the root's own
+    # spelling for the matching prefix, then check it again with a plain startswith on the path actually used.
+    prefix = ""
+    for root in export_roots():
+        cand = _prefix(root)
+        if _fold(real[:len(cand)]) == _fold(cand):
+            prefix = cand
+            real = cand + real[len(cand):]
+            break
+        if _fold(real) == _fold(root):
+            prefix = real = cand
+            break
+    if not prefix:
+        raise ReveladoError("E_BAD_INPUT", "dest_dir debe estar en tu carpeta personal, una carpeta compartida o "
+                                           "un disco externo / de red (o en REVELADO_EXPORT_ROOTS)")
+    if not real.startswith(prefix):
+        raise ReveladoError("E_BAD_INPUT", "dest_dir fuera de las carpetas de exportación permitidas")
+    if any(_inside(real, s) for s in _system_dirs()):
+        raise ReveladoError("E_BAD_INPUT", "no se puede exportar dentro de una carpeta del sistema")
+    d = Path(real)
+    if _inside(real, os.path.realpath(ctx.settings.cache_dir)):
         raise ReveladoError("E_BAD_INPUT", "no se puede exportar dentro de la caché del motor")
     for r in photo_rows:
         sess = ctx.catalog.session(r["session_id"])
-        if sess:
-            root = Path(sess["path"])
-            if d == root or root in d.parents:
-                raise ReveladoError("E_BAD_INPUT", "no se puede exportar dentro de la carpeta de originales")
+        if sess and _inside(real, os.path.realpath(sess["path"])):
+            raise ReveladoError("E_BAD_INPUT", "no se puede exportar dentro de la carpeta de originales")
     try:
         d.mkdir(parents=True, exist_ok=True)
     except OSError as e:

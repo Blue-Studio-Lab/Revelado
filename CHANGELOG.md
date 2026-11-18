@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows [Kee
   - user manual (EN/ES) and technical documentation;
   - contributing guide with DCO, Code of Conduct, security policy and governance;
   - citation file.
+- `REVELADO_EXPORT_ROOTS` (engine): extra folders exports may be written into. See *Changed*.
 - CI workflows:
   - Python lint/typecheck/tests on Ubuntu, macOS and Windows with Python 3.12–3.14;
   - web build and typecheck;
@@ -20,6 +21,11 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Changed
 - The project is now named **Revelado** (formerly a working title). The Python distribution, import package and CLI are `revelado`.
 - Renamed the internal identifiers that still used the former working title: the develop routes are `POST /api/develop/sample` and `POST /api/develop/batch`, the Develop screen is `#/develop`, the engine token header is only `X-Revelado-Token`, only `REVELADO_*` environment variables are read, and the error class is only `ReveladoError`. No compatibility shims, since no public release existed.
+- Export destinations are now checked against allowed export locations after resolving symbolic links: home, temp,
+  shared folders and external/network disks (macOS `/Volumes`, `/Users/Shared`; Linux `/media`, `/mnt`, `/run/media`,
+  `/run/user/<uid>`, `/srv`, `/data`; Windows any drive and UNC shares except the system folders), plus
+  `REVELADO_EXPORT_ROOTS` and the MCP server's `REVELADO_EXPORT_DIRS`. Destinations with `..`, control characters or
+  Windows device paths are refused. Exports to other system locations now return 400 `E_BAD_INPUT`.
 
 ## [0.1.0] - unreleased
 
