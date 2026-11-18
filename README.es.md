@@ -16,7 +16,7 @@ Emulación física de película, reducción de ruido según el ISO, corrección 
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/Blue-Studio-Lab/Revelado"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/Blue-Studio-Lab/Revelado/badge"></a>
   <a href="LICENSE"><img alt="Licencia: GPL-3.0-or-later" src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-blue"></a>
   <img alt="Python 3.12 | 3.13 | 3.14" src="https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776ab">
-  <img alt="Node.js 20+" src="https://img.shields.io/badge/node-20%2B-5fa04e">
+  <img alt="Node.js 22.12+" src="https://img.shields.io/badge/node-22.12%2B-5fa04e">
   <img alt="Plataformas: macOS | Windows | Linux" src="https://img.shields.io/badge/plataforma-macOS%20%7C%20Windows%20%7C%20Linux-555">
   <img alt="Estado: alfa, 0.2.0.dev0" src="https://img.shields.io/badge/estado-alfa%20(0.2.0.dev0)-orange">
 </p>
@@ -110,7 +110,7 @@ Notas sobre el orden:
 ```mermaid
 flowchart LR
   subgraph CLIENTS["Clientes"]
-    UI["Interfaz web<br/>React 18 + TypeScript + Vite 5<br/>apps/web · 127.0.0.1:5173"]
+    UI["Interfaz web<br/>React 18 + TypeScript + Vite 8<br/>apps/web · 127.0.0.1:5173"]
     CC["Claude Code / Claude Desktop<br/>(tu propia cuenta)"]
   end
   MCP["revelado-mcp<br/>MCP por stdio<br/>solo carpetas permitidas"]
@@ -223,9 +223,9 @@ La semilla sale del **contenido** del archivo: renombrarlo no cambia nada y el m
 | **Privacidad** | Local primero, sin telemetría ni cuentas. Con la IA activada solo salen del equipo previas JPEG recodificadas: sin EXIF, sin GPS, sin nombres de archivo ni rutas; las fotos se identifican con ids opacos. Los números de serie se convierten en hash en local. |
 | **Interfaces** | API HTTP (28 rutas REST + 1 WebSocket en `127.0.0.1:8790`) · CLI `revelado` (arranca el motor; los comandos de lote están planificados) · servidor MCP con 17 herramientas · plugin de Claude Code (3 skills) · paquete `.mcpb` para Claude Desktop |
 | **Plataformas** | macOS, Windows, Linux. Matriz de CI: Ubuntu 24.04, macOS 15 y Windows Server 2025 × Python 3.12 / 3.13 / 3.14. |
-| **Requisitos** | Python ≥ 3.12 · Node.js ≥ 20 (CI compila con 22) · RawTherapee ≥ 5.10 para RAW (`rawtherapee-cli`; el perfil está escrito para 5.13 y las mediciones usaron 5.13) · ExifTool · opcionales: `jpegtran`, `swiftc` (ayudantes de Vision en macOS) |
+| **Requisitos** | Python ≥ 3.12 · Node.js 22.12+ o 24 LTS (CI compila con 22) · RawTherapee ≥ 5.10 para RAW (`rawtherapee-cli`; el perfil está escrito para 5.13 y las mediciones usaron 5.13) · ExifTool · opcionales: `jpegtran`, `swiftc` (ayudantes de Vision en macOS) |
 | **Dependencias de Python** | FastAPI, Uvicorn, Pydantic, NumPy, SciPy, OpenCV (contrib), Pillow, rawpy, psutil, tifffile, imagecodecs · opcional `anthropic` |
-| **Pila web** | React 18, TypeScript 5, Vite 5, Vitest, Playwright |
+| **Pila web** | React 18, TypeScript 5, Vite 8, Vitest 5, Playwright |
 | **Licencia** | Código: GPL-3.0-or-later · datos de perfiles de cámara y objetivo incluidos: CC BY-SA 4.0 salvo que el archivo diga otra cosa |
 | **Límites conocidos** | La limpieza de cabello es experimental y solo funciona en macOS. Una sola película entrenada (inspirada en Ektar). Sin corrección de viñeteo y sin Lensfun. La CA lateral no se corrige en archivos X-Trans. Algunos umbrales (ventanas de tono del defringe, objetivo de NR) se ajustaron con un sensor Sony de formato completo. Revelar un archivo de 33 MP necesita varios GB de RAM. |
 
@@ -273,7 +273,7 @@ python scripts/benchmark_quality.py --only nr   # o bien: ca | perf
 
 ## Inicio rápido
 
-Necesitas **Python 3.12–3.14**, **Node.js 20 LTS o superior**, **git** y **[ExifTool](https://exiftool.org)**. Para revelar RAW también necesitas **[RawTherapee](https://rawtherapee.com) 5.10 o superior**, con `rawtherapee-cli` en el `PATH`.
+Necesitas **Python 3.12–3.14**, **Node.js 22 LTS (22.12 o superior) o 24 LTS**, **git** y **[ExifTool](https://exiftool.org)**. Para revelar RAW también necesitas **[RawTherapee](https://rawtherapee.com) 5.10 o superior**, con `rawtherapee-cli` en el `PATH`.
 
 <details open><summary><b>macOS</b></summary>
 
@@ -306,7 +306,9 @@ Si `rawtherapee-cli.exe` no está en el `PATH`, añade la carpeta de instalació
 <details><summary><b>Linux (Debian/Ubuntu)</b></summary>
 
 ```bash
-sudo apt install python3 python3-venv nodejs npm libimage-exiftool-perl rawtherapee
+sudo apt install python3 python3-venv libimage-exiftool-perl rawtherapee
+# Node.js: el paquete de la distribución es demasiado antiguo (Ubuntu 24.04 trae 18.x). Instala 22 LTS o 24 LTS
+# desde https://nodejs.org/es/download (nvm o los binarios oficiales) y comprueba `node -v`.
 git clone https://github.com/Blue-Studio-Lab/Revelado.git && cd Revelado
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e "engine[dev]"

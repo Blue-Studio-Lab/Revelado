@@ -13,7 +13,7 @@ Thanks for helping! Revelado is a photographer's tool built in the open. Bug rep
 
 ## Development setup
 
-Prerequisites: Python 3.12–3.14, Node.js 20 LTS or newer, git and ExifTool. RawTherapee is optional; you only need it to run real develops.
+Prerequisites: Python 3.12–3.14, Node.js 22 LTS (22.12 or newer) or 24 LTS, git and ExifTool. RawTherapee is optional; you only need it to run real develops.
 
 ```bash
 git clone https://github.com/Blue-Studio-Lab/Revelado.git && cd Revelado
