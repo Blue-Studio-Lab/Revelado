@@ -63,14 +63,18 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           ver="$(python -c 'import tomllib;print(tomllib.load(open("engine/pyproject.toml","rb"))["project"]["version"])')"
-          [ "v$ver" = "$TAG" ] || { echo "::error::tag $TAG does not match engine/pyproject.toml version $ver"; exit 1; }
+          # tags use SemVer pre-release names, Python versions PEP 440: v0.2.0-beta.1 <-> 0.2.0b1
+          want="$(printf '%s' "${TAG#v}" | sed -E 's/-alpha\.?([0-9]+)$/a\1/; s/-beta\.?([0-9]+)$/b\1/; s/-rc\.?([0-9]+)$/rc\1/')"
+          [ "$ver" = "$want" ] || { echo "::error::tag $TAG (PEP 440: $want) does not match engine/pyproject.toml version $ver"; exit 1; }
       - name: Check MCP package version matches tag
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           TAG: ${{ github.ref_name }}
         run: |
           ver="$(python -c 'import tomllib;print(tomllib.load(open("mcp/pyproject.toml","rb"))["project"]["version"])')"
-          [ "v$ver" = "$TAG" ] || { echo "::error::tag $TAG does not match mcp/pyproject.toml version $ver"; exit 1; }
+          # tags use SemVer pre-release names, Python versions PEP 440: v0.2.0-beta.1 <-> 0.2.0b1
+          want="$(printf '%s' "${TAG#v}" | sed -E 's/-alpha\.?([0-9]+)$/a\1/; s/-beta\.?([0-9]+)$/b\1/; s/-rc\.?([0-9]+)$/rc\1/')"
+          [ "$ver" = "$want" ] || { echo "::error::tag $TAG (PEP 440: $want) does not match mcp/pyproject.toml version $ver"; exit 1; }
       - name: Build Python packages (revelado, revelado-mcp)
         run: |
           python -m pip install --upgrade build
