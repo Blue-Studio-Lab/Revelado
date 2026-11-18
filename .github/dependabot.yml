@@ -3,12 +3,14 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }   # let new releases age a week before proposing them (supply-chain hygiene)
     groups:
       actions: { patterns: ["*"] }
     commit-message: { prefix: "ci" }
   - package-ecosystem: pip
     directory: /engine
     schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }   # let new releases age a week before proposing them (supply-chain hygiene)
     groups:
       python-minor-patch:
         update-types: [minor, patch]
@@ -17,6 +19,7 @@ updates:
   - package-ecosystem: pip
     directory: /mcp
     schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }   # let new releases age a week before proposing them (supply-chain hygiene)
     groups:
       mcp-minor-patch:
         update-types: [minor, patch]
@@ -25,6 +28,7 @@ updates:
   - package-ecosystem: npm
     directory: /apps/web
     schedule: { interval: weekly, day: monday }
+    cooldown: { default-days: 7 }   # let new releases age a week before proposing them (supply-chain hygiene)
     groups:
       web-minor-patch:
         update-types: [minor, patch]
