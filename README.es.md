@@ -26,8 +26,8 @@ Emulación física de película, reducción de ruido según el ISO, corrección 
 ---
 
 <p align="center">
-  <!-- TODO(demo): sustituir por la demo grabada (especificación en la sección "Demo"). Solo imágenes de prueba CC0 / CC-BY. -->
-  <img src="docs/assets/demo-placeholder.svg" alt="Espacio para la demo (todavía no está grabada)" width="720">
+  <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4"><img src="docs/assets/demo-poster.jpg" alt="Video de demostración y tutorial de Revelado (inglés, 3:42). Haz clic para verlo." width="720"></a>
+  <br><sub>Haz clic en la imagen para ver la demo (MP4, 157 MB, en inglés) · <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1">página de la publicación con los créditos</a></sub>
 </p>
 
 ## Contenido
@@ -342,16 +342,22 @@ Qué sale de tu equipo si lo activas: previas JPEG reducidas (≤ 1024 px, más 
 
 ## Demo
 
-La demo **todavía no está grabada**; la imagen de arriba es un marcador. La grabación debe cumplir esta ficha:
+**[Ver la demo y el tutorial (inglés, 3:42, 1920×1080)](https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4)**: el MP4 va adjunto a la publicación [`demo-video-v1`](https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1), porque GitHub no guarda archivos de más de 100 MB en el repositorio.
 
-| Concepto | Especificación |
-|---|---|
-| Formato | GIF animado o MP4, 20–30 s, ≤ 8 MB, a 720 px de ancho en el README |
-| Imágenes | Solo los RAW de prueba CC0 de `scripts/fetch_test_raws.py` (o imágenes CC-BY con autorización de las personas retratadas). Nunca fotos de clientes. |
-| Guion | 1 · abrir una carpeta (emparejado RAW + JPG) → 2 · vista al 100 % con las máscaras de ruido y CA → 3 · selección técnica → 4 · cuarto oscuro: revelar una muestra con el preajuste neutro y con el de Ektar → 5 · horno: progreso del lote y vigilante de memoria → 6 · exportar |
-| Ajustes que se ven | Valores por defecto de la receta, IA apagada. La vía de IA solo puede aparecer en un clip aparte y rotulado. |
-| Rótulos | Indicar la máquina y que los tiempos varían; no mostrar cifras que no estén en [Mediciones](#mediciones) |
-| Ubicación | `docs/assets/` (aparte de `engine/tests/fixtures/`, la única carpeta donde la comprobación de privacidad admite imágenes) |
+Muestra el flujo completo con RAW reales de cámaras Sony, Canon, Panasonic, Nikon y Pentax:
+1. Abrir una carpeta; los RAW y los JPG se emparejan.
+2. Ver una foto al 100 % con las máscaras de ruido, aberración cromática y sombreado.
+3. Hacer la selección técnica.
+4. En el cuarto oscuro, revelar una muestra con una receta de película o con la neutra.
+5. Seguir el lote en el horno.
+6. Exportar.
+
+También incluye dos fotos nocturnas con ISO extremo y un vistazo a lo que hace el motor por dentro. Las cifras que salen en pantalla son las de [Mediciones](#mediciones); los tiempos dependen de la máquina.
+
+**Créditos de los dos ejemplos de ISO alto (CC BY-SA 4.0, modificadas: reveladas con Revelado, receta Neutro):** "Noisy Dam at Night" de Colin Walls (epeeist), [discuss.pixls.us](https://discuss.pixls.us/t/noisy-dam-at-night/42021) · "Last Lunar Eclipse" de Jetze (anky & jetze), [discuss.pixls.us](https://discuss.pixls.us/t/last-lunar-eclipse-how-to-deal-with-the-inevitable-noise/52526) · [licencia](https://creativecommons.org/licenses/by-sa/4.0/). El resto de las fotos son del autor y se muestran con permiso; ninguna es de clientes.
+
+Hay también versión en español y cortes verticales de 1 minuto; las nuevas versiones se irán añadiendo a las publicaciones.
+
 
 ## Estructura del proyecto
 

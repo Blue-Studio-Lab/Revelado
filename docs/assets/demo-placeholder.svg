@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 405" width="720" height="405" role="img" aria-labelledby="t">
-  <title id="t">Demo GIF placeholder</title>
-  <rect width="720" height="405" rx="12" fill="#1a1410"/>
-  <rect x="24" y="24" width="672" height="357" rx="8" fill="none" stroke="#d9a441" stroke-width="2" stroke-dasharray="10 8"/>
-  <polygon points="335,170 335,236 392,203" fill="#d9a441"/>
-  <text x="360" y="290" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="20" fill="#f6efe4">Demo coming soon</text>
-  <text x="360" y="318" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" fill="#b9a891">folder → 100 % masks → cull → develop sample → oven</text>
-</svg>

@@ -26,8 +26,8 @@ Physical film emulation, ISO-aware noise reduction, chromatic-aberration correct
 ---
 
 <p align="center">
-  <!-- TODO(demo): replace with the recorded demo (spec in the "Demo" section below). CC0 / CC-BY test images only. -->
-  <img src="docs/assets/demo-placeholder.svg" alt="Demo placeholder (the demo has not been recorded yet)" width="720">
+  <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4"><img src="docs/assets/demo-poster.jpg" alt="Revelado demo and tutorial video (English, 3:42). Click to play." width="720"></a>
+  <br><sub>Click the image to watch the demo (MP4, 157 MB) · <a href="https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1">release page with credits</a></sub>
 </p>
 
 ## Contents
@@ -342,16 +342,22 @@ What leaves your machine when you opt in: downscaled JPEG previews (≤ 1024 px,
 
 ## Demo
 
-The demo has **not been recorded yet**; the image at the top is a placeholder. The recording must follow this spec:
+**[Watch the demo and tutorial (English, 3:42, 1920×1080)](https://github.com/Blue-Studio-Lab/Revelado/releases/download/demo-video-v1/revelado-demo-en.mp4)**: the MP4 is attached to the [`demo-video-v1` release](https://github.com/Blue-Studio-Lab/Revelado/releases/tag/demo-video-v1) because GitHub does not store files over 100 MB in the repository.
 
-| Item | Spec |
-|---|---|
-| Format | Animated GIF or MP4, 20–30 s, ≤ 8 MB, shown 720 px wide in the README |
-| Source images | Only the CC0 test RAWs from `scripts/fetch_test_raws.py` (or CC-BY images with model releases). Never client photos. |
-| Storyboard | 1 · open a folder (RAW + JPG pairing) → 2 · 100 % view with the noise and CA masks → 3 · technical cull → 4 · develop: one sample with the neutral and the Ektar presets → 5 · oven: batch progress and memory watchdog → 6 · export |
-| Settings shown | Default recipe values, AI off. The AI route may appear only as a separate, labelled clip. |
-| Captions | Name the machine and say that timings vary; show no number that is not in [Benchmarks](#benchmarks) |
-| Location | `docs/assets/` (besides `engine/tests/fixtures/`, the only folder where the privacy check allows image files) |
+It shows the whole flow on real RAW files from Sony, Canon, Panasonic, Nikon and Pentax cameras:
+1. Open a folder; RAW and JPG files are paired.
+2. Look at a photo at 100 % with the noise, chromatic-aberration and shading masks.
+3. Run the technical cull.
+4. In the darkroom, develop one sample with a film recipe or the neutral one.
+5. Watch the batch in the oven.
+6. Export.
+
+It also includes two extreme high-ISO night shots and a look at what the engine does inside. The on-screen numbers come from [Benchmarks](#benchmarks); timings vary by machine.
+
+**Credits for the two high-ISO examples (CC BY-SA 4.0, modified: developed with Revelado, Neutral recipe):** "Noisy Dam at Night" by Colin Walls (epeeist), [discuss.pixls.us](https://discuss.pixls.us/t/noisy-dam-at-night/42021) · "Last Lunar Eclipse" by Jetze (anky & jetze), [discuss.pixls.us](https://discuss.pixls.us/t/last-lunar-eclipse-how-to-deal-with-the-inevitable-noise/52526) · [license](https://creativecommons.org/licenses/by-sa/4.0/). All other photos are by the author and shown with permission; no client photos.
+
+A Spanish version and vertical 1-minute cuts also exist; new versions will be added to the releases.
+
 
 ## Project structure
 
