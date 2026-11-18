@@ -15,7 +15,7 @@ This page describes the system as it is in **0.2.0.dev0** (from source). Every b
 ```mermaid
 flowchart LR
   subgraph CLIENTS["Clients"]
-    UI["Web UI<br/>React 18 + TypeScript + Vite 5<br/>apps/web · 127.0.0.1:5173"]
+    UI["Web UI<br/>React 18 + TypeScript + Vite 8<br/>apps/web · 127.0.0.1:5173"]
     CC["Claude Code / Claude Desktop<br/>(your own account)"]
   end
   MCP["revelado-mcp<br/>MCP over stdio<br/>allow-listed folders only"]
@@ -66,7 +66,7 @@ flowchart LR
 | Develop orchestration | [`develop.py`](../engine/revelado/develop.py), [`runner.py`](../engine/revelado/runner.py) | subprocess, psutil | Sample / batch / export jobs, admission control, watchdog, atomic placement of outputs |
 | Develop worker | [`worker.py`](../engine/revelado/worker.py), [`pipeline/`](../engine/revelado/pipeline) | RawTherapee, NumPy, OpenCV, tifffile | One photo end to end in an isolated child process |
 | Recipes | [`recipe.py`](../engine/revelado/recipe.py) | Python | Schema, presets, validation, mapping to engine parameters |
-| Web UI | [`apps/web/`](../apps/web) | React 18, TypeScript 5, Vite 5 | Screens: Onboarding, Library, Viewer, Cull, Develop, Oven, Films, Settings, Guide |
+| Web UI | [`apps/web/`](../apps/web) | React 18, TypeScript 5, Vite 8 | Screens: Onboarding, Library, Viewer, Cull, Develop, Oven, Films, Settings, Guide |
 | MCP server and plugin | [`mcp/`](../mcp), [`.claude-plugin/`](../.claude-plugin) | official `mcp` SDK, httpx | 17 tools over stdio; Claude Code plugin with 3 skills; `.mcpb` bundle for Claude Desktop |
 
 ## 2. Process and threading model

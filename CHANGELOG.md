@@ -26,6 +26,7 @@ All notable changes to this project are documented here. The format follows [Kee
   `/run/user/<uid>`, `/srv`, `/data`; Windows any drive and UNC shares except the system folders), plus
   `REVELADO_EXPORT_ROOTS` and the MCP server's `REVELADO_EXPORT_DIRS`. Destinations with `..`, control characters or
   Windows device paths are refused. Exports to other system locations now return 400 `E_BAD_INPUT`.
+- Web toolchain moved to Vite 8 (Rolldown/Oxc), Vitest 5 and `@vitejs/plugin-react` 6; it needs Node.js 22.12+ or 24 LTS (the Debian/Ubuntu `nodejs` package is too old; the install docs now say where to get Node). React 18 and TypeScript 5 are unchanged, and so are the build layout (`apps/web/dist`), the dev proxy and the engine's static serving. The JS and CSS minifiers change (Oxc, Lightning CSS) and the default browser target rises to Vite 8's `baseline-widely-available` (Chrome/Edge 111, Firefox 114, Safari 16.4), so older browsers may not run the UI.
 
 ## [0.1.0] - unreleased
 

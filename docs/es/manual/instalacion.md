@@ -9,7 +9,7 @@ Revelado v0.1 funciona desde el código en **macOS, Windows y Linux**. Los insta
 | Herramienta | Versión | Para qué |
 |---|---|---|
 | Python | 3.12, 3.13 o 3.14 | el motor |
-| Node.js | 20 LTS o superior | la interfaz web |
+| Node.js | 22 LTS (22.12 o superior) o 24 LTS | la interfaz web |
 | ExifTool | reciente | leer metadatos (obligatorio) |
 | RawTherapee | 5.10 o superior, con `rawtherapee-cli` | revelar RAW (Cuarto oscuro, Horno, Exportar) |
 | RAM | 16 GB recomendados | un revelado a resolución completa usa varios GB |

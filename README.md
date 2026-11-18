@@ -16,7 +16,7 @@ Physical film emulation, ISO-aware noise reduction, chromatic-aberration correct
   <a href="https://securityscorecards.dev/viewer/?uri=github.com/Blue-Studio-Lab/Revelado"><img alt="OpenSSF Scorecard" src="https://api.securityscorecards.dev/projects/github.com/Blue-Studio-Lab/Revelado/badge"></a>
   <a href="LICENSE"><img alt="License: GPL-3.0-or-later" src="https://img.shields.io/badge/license-GPL--3.0--or--later-blue"></a>
   <img alt="Python 3.12 | 3.13 | 3.14" src="https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776ab">
-  <img alt="Node.js 20+" src="https://img.shields.io/badge/node-20%2B-5fa04e">
+  <img alt="Node.js 22.12+" src="https://img.shields.io/badge/node-22.12%2B-5fa04e">
   <img alt="Platforms: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-555">
   <img alt="Status: alpha, 0.2.0.dev0" src="https://img.shields.io/badge/status-alpha%20(0.2.0.dev0)-orange">
 </p>
@@ -110,7 +110,7 @@ Notes on the order:
 ```mermaid
 flowchart LR
   subgraph CLIENTS["Clients"]
-    UI["Web UI<br/>React 18 + TypeScript + Vite 5<br/>apps/web · 127.0.0.1:5173"]
+    UI["Web UI<br/>React 18 + TypeScript + Vite 8<br/>apps/web · 127.0.0.1:5173"]
     CC["Claude Code / Claude Desktop<br/>(your own account)"]
   end
   MCP["revelado-mcp<br/>MCP over stdio<br/>allow-listed folders only"]
@@ -223,9 +223,9 @@ The seed comes from the file's **content**, so renaming a file changes nothing a
 | **Privacy** | Local-first, no telemetry, no account. With AI enabled, only re-encoded JPEG previews leave the machine: no EXIF, no GPS, no file names or paths; frames are labelled with opaque ids. Serial numbers are hashed locally. |
 | **Interfaces** | HTTP API (28 REST routes + 1 WebSocket on `127.0.0.1:8790`) · CLI `revelado` (starts the engine; batch commands planned) · MCP server with 17 tools · Claude Code plugin (3 skills) · Claude Desktop `.mcpb` bundle |
 | **Platforms** | macOS, Windows, Linux. CI matrix: Ubuntu 24.04, macOS 15 and Windows Server 2025 × Python 3.12 / 3.13 / 3.14. |
-| **Requirements** | Python ≥ 3.12 · Node.js ≥ 20 (CI builds with 22) · RawTherapee ≥ 5.10 for RAW (`rawtherapee-cli`; the profile targets 5.13 and the benchmarks used 5.13) · ExifTool · optional: `jpegtran`, `swiftc` (macOS Vision helpers) |
+| **Requirements** | Python ≥ 3.12 · Node.js 22.12+ or 24 LTS (CI builds with 22) · RawTherapee ≥ 5.10 for RAW (`rawtherapee-cli`; the profile targets 5.13 and the benchmarks used 5.13) · ExifTool · optional: `jpegtran`, `swiftc` (macOS Vision helpers) |
 | **Python dependencies** | FastAPI, Uvicorn, Pydantic, NumPy, SciPy, OpenCV (contrib), Pillow, rawpy, psutil, tifffile, imagecodecs · optional `anthropic` |
-| **Web stack** | React 18, TypeScript 5, Vite 5, Vitest, Playwright |
+| **Web stack** | React 18, TypeScript 5, Vite 8, Vitest 5, Playwright |
 | **Licence** | Code: GPL-3.0-or-later · bundled camera/lens profile data: CC BY-SA 4.0 unless a file says otherwise |
 | **Known limits** | Hair clean-up is experimental and macOS-only. One trained film stock (Ektar-inspired). No vignetting correction and no Lensfun. Lateral CA is not corrected on X-Trans files. Some thresholds (defringe hue windows, NR target) were tuned on a full-frame Sony sensor. Developing a 33 MP file needs several GB of RAM. |
 
@@ -273,7 +273,7 @@ python scripts/benchmark_quality.py --only nr   # or: ca | perf
 
 ## Quick start
 
-You need **Python 3.12–3.14**, **Node.js 20 LTS or newer**, **git** and **[ExifTool](https://exiftool.org)**. To develop RAW files you also need **[RawTherapee](https://rawtherapee.com) 5.10+**, with `rawtherapee-cli` on your `PATH`.
+You need **Python 3.12–3.14**, **Node.js 22 LTS (22.12 or newer) or 24 LTS**, **git** and **[ExifTool](https://exiftool.org)**. To develop RAW files you also need **[RawTherapee](https://rawtherapee.com) 5.10+**, with `rawtherapee-cli` on your `PATH`.
 
 <details open><summary><b>macOS</b></summary>
 
@@ -306,7 +306,9 @@ If `rawtherapee-cli.exe` is not on your `PATH`, add the RawTherapee install fold
 <details><summary><b>Linux (Debian/Ubuntu)</b></summary>
 
 ```bash
-sudo apt install python3 python3-venv nodejs npm libimage-exiftool-perl rawtherapee
+sudo apt install python3 python3-venv libimage-exiftool-perl rawtherapee
+# Node.js: the distro package is too old (Ubuntu 24.04 ships 18.x). Install 22 LTS or 24 LTS
+# from https://nodejs.org/en/download (nvm or the official binaries), then check `node -v`.
 git clone https://github.com/Blue-Studio-Lab/Revelado.git && cd Revelado
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e "engine[dev]"

@@ -9,7 +9,7 @@ Revelado v0.1 runs from source on **macOS, Windows and Linux**. Signed installer
 | Tool | Version | Needed for |
 |---|---|---|
 | Python | 3.12, 3.13 or 3.14 | the engine |
-| Node.js | 20 LTS or newer | the web interface |
+| Node.js | 22 LTS (22.12 or newer) or 24 LTS | the web interface |
 | ExifTool | any recent | reading metadata (required) |
 | RawTherapee | 5.10 or newer, with `rawtherapee-cli` | developing RAW files (Develop, Oven, Export) |
 | RAM | 16 GB recommended | one full-resolution develop uses several GB |
@@ -40,7 +40,9 @@ If `rawtherapee-cli.exe` or `exiftool.exe` is not found, add the install folders
 ## Linux (Debian/Ubuntu)
 
 ```bash
-sudo apt install python3 python3-venv nodejs npm libimage-exiftool-perl rawtherapee
+sudo apt install python3 python3-venv libimage-exiftool-perl rawtherapee
+# Node.js: the distro package is too old (Ubuntu 24.04 ships 18.x). Install 22 LTS or 24 LTS
+# from https://nodejs.org/en/download (nvm or the official binaries), then check `node -v`.
 git clone https://github.com/Blue-Studio-Lab/Revelado.git && cd Revelado
 python3 -m venv .venv && . .venv/bin/activate
 pip install -e "engine[dev]"
