@@ -54,14 +54,13 @@ export function emptyRecord<V>(): Record<string, V> {
  */
 export function withEntry<V>(rec: Record<string, V>, key: unknown, value: V): Record<string, V> {
   if (!isSafeKey(key)) return rec;
-  const out = emptyRecord<V>();
-  for (const k of Object.keys(rec)) {
-    if (isSafeKey(k)) Object.defineProperty(out, k, { value: rec[k], enumerable: true, writable: true, configurable: true });
-  }
-  // explicit guard at the write site (prototype-polluting names never reach the null-prototype record)
-  if (key === '__proto__' || key === 'constructor' || key === 'prototype') return rec;
-  Object.defineProperty(out, key, { value, enumerable: true, writable: true, configurable: true });
-  return out;
+  // Built with Object.fromEntries (own data properties only, never a prototype write);
+  // unsafe names were rejected above, and lookups go through getEntry (own properties only).
+  const entries: Array<[string, V]> = Object.keys(rec)
+    .filter((k) => isSafeKey(k) && k !== key)
+    .map((k) => [k, rec[k]]);
+  entries.push([key, value]);
+  return Object.assign(emptyRecord<V>(), Object.fromEntries(entries)) as Record<string, V>;
 }
 
 /** Own-property lookup that never reaches the prototype chain. */
