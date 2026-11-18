@@ -146,7 +146,8 @@ def _val_msg(e) -> str:
         return "; ".join(f"{'.'.join(str(x) for x in d.get('loc', ()) if x != 'body')}: {d.get('msg')}"
                          for d in e.errors())[:400]
     except Exception:  # noqa: BLE001
-        return str(e)[:400]
+        log.warning("could not summarise a validation error", exc_info=True)
+        return "datos de entrada no válidos"
 
 
 @app.exception_handler(RequestValidationError)
@@ -587,7 +588,21 @@ def web_app(path: str):
     if not _DIST.is_dir():
         return JSONResponse({"name": "Revelado engine", "version": __version__,
                              "note": "La interfaz web se sirve con 'npm run dev' en apps/web (o compílala en apps/web/dist)."})
-    f = (_DIST / path).resolve()
-    if path and f.is_file() and _DIST.resolve() in f.parents:
+    f = _dist_file(path)
+    if f is not None:
         return FileResponse(f)
     return FileResponse(_DIST / "index.html")
+
+
+def _dist_file(path: str) -> str | None:
+    """Real path of a file inside the built web app, or None (unknown path, '..', NUL, or a symlink that leaves
+    the dist folder). Callers fall back to index.html (client-side routing)."""
+    if not path or "\x00" in path or "\\" in path or path.startswith("/"):
+        return None
+    if any(part in ("", ".", "..") for part in path.split("/")):
+        return None
+    root = os.path.realpath(_DIST)
+    f = os.path.realpath(os.path.join(root, path))
+    if not f.startswith(root + os.sep) or not os.path.isfile(f):
+        return None
+    return f

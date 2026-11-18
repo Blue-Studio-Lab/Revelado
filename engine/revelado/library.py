@@ -89,8 +89,9 @@ def open_library(cat: Catalog, settings: Settings, path_str: str, include_hidden
         raise ReveladoError("E_BAD_INPUT", "no se puede abrir la carpeta de caché del motor")
     t0 = time.time()
     groups, skipped = scan(root, include_hidden)
-    sid = session_id_for(root)
+    sid = cat.existing_session_id(root) or session_id_for(root)    # reuse ids minted by older versions
     known = cat.known_mtimes(sid)
+    known_ids = cat.photo_ids(sid)
     salt = _salt(settings)
 
     # read metadata only for new/changed files (from the RAW when present: profiles resolve from the RAW)
@@ -112,7 +113,7 @@ def open_library(cat: Catalog, settings: Settings, path_str: str, include_hidden
         meta = json.loads(g["meta_json"]) if "meta_json" in g else meta_new.get(str(src), {"error": "no metadata"})
         if g["jpg"] and g["raw"] and not meta.get("width"):
             meta.setdefault("note", "dimensiones desconocidas")
-        rows.append({"id": photo_id_for(sid, key), "stem_key": key, "name": g["name"],
+        rows.append({"id": known_ids.get(key) or photo_id_for(sid, key), "stem_key": key, "name": g["name"],
                      "raw_path": str(g["raw"]) if g["raw"] else None, "jpg_path": str(g["jpg"]) if g["jpg"] else None,
                      "mtime": g["mtime"], "meta": meta,
                      "capture_ts": meta.get("capture_ts") or g["mtime"]})
