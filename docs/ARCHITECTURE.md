@@ -8,7 +8,7 @@
 >
 > Solo corre un trabajo pesado a la vez, y cada foto se revela en su propio proceso, vigilado por un control de memoria. Todo ajuste es una receta, y la misma receta da los mismos píxeles. Los diagramas de abajo siguen el orden real del código.
 
-This page describes the system as it is in **0.2.0.dev0** (from source). Every box maps to a file in the repository. For the per-stage algorithms see the [technical deep-dive](technical/index.md); for measured numbers see [BENCHMARKS.md](technical/BENCHMARKS.md).
+This page describes the system as it is in **0.2.0-beta.1** (from source). Every box maps to a file in the repository. For the per-stage algorithms see the [technical deep-dive](technical/index.md); for measured numbers see [BENCHMARKS.md](technical/BENCHMARKS.md).
 
 ## 1. Components
 

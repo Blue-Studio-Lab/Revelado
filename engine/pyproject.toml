@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "revelado"
-version = "0.2.0.dev0"
+version = "0.2.0b1"
 description = "Revelado: local, open photo developer (RAW develop, noise/CA clean-up, film emulation, retouch, culling)"
 readme = "README.md"
 license = "GPL-3.0-or-later"

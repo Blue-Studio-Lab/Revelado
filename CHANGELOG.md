@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0-beta.1] - 2026-11-18
+
+First public **beta**. It installs from source (see the README Quick start); there is no installer yet. Feedback is welcome through the issue templates, including the new *Beta feedback* form.
+
+### Fixed
+- Extreme-ISO RAWs (for example ISO 25600 and above) no longer get magenta or purple shadows. The fix only switches on when the measured noise would clip at the black level; every other file develops exactly as before.
+- The camera name no longer repeats the maker ("Canon Canon EOS 800D" became "Canon EOS 800D").
+- Cameras without a curated profile get their sensor class from the EXIF crop factor, so APS-C bodies such as the ZV-E10 and the 800D are no longer labelled full-frame.
+- Export jobs in the Oven say "Exporting i of n" and count the exported photos.
+- Engine tests run on CI runners without exiftool, and on Windows.
+
+### Security
+- All open CodeQL alerts are closed:
+  - Export destinations must resolve inside an allowed root (home, temp, external or NAS mounts). `REVELADO_EXPORT_ROOTS` adds more. Paths with `..`, control characters or symlinks that escape are rejected.
+  - The engine serves web-app files only from inside the built folder.
+  - Validation errors no longer echo exception text.
+  - Files created by the copy fallback are no longer world-readable.
+  - New catalog ids use SHA-256; ids already in a catalog are kept.
+  - The web UI only opens or loads engine URLs from the same origin or from the engine's own origin.
+  - The web UI's lookup records cannot be polluted through the prototype.
+- Dependabot no longer proposes major-version updates. Those are migrated by hand, with tests.
+
+
 ### Added
 - Public repository scaffolding:
   - README in English and Spanish;

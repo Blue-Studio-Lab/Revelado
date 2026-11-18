@@ -139,20 +139,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
+          pre=()
+          case "$TAG" in *-*) pre=(--prerelease) ;; esac   # v0.2.0-beta.1, v1.0.0-rc.1 ...
           gh release create "$TAG" dist/* \
             --repo "$GITHUB_REPOSITORY" \
-            --draft --verify-tag \
+            --draft --verify-tag "${pre[@]}" \
             --title "Revelado $TAG" \
             --notes "Draft. See CHANGELOG.md. Verify any file with: gh attestation verify <file> --repo $GITHUB_REPOSITORY"
 
   # PyPI via Trusted Publishing (OIDC): no token is stored anywhere. One-time setup by the maintainer on pypi.org:
   #   project "revelado" and project "revelado-mcp" -> Publishing -> add a GitHub publisher:
   #   owner Blue-Studio-Lab, repo Revelado, workflow release.yml, environment "pypi".
-  # Runs only after the draft release exists, and only for real tags (never on dry runs).
+  # Runs only after the draft release exists, only for real tags (never on dry runs) and never for
+  # pre-release tags such as v0.2.0-beta.1: betas are distributed from GitHub, not PyPI.
   pypi:
     name: publish to PyPI (${{ matrix.package }})
     needs: attest-and-draft
-    if: startsWith(github.ref, 'refs/tags/v') && inputs.dry-run != true
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') && inputs.dry-run != true
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment:

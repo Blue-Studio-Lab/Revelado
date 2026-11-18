@@ -18,7 +18,7 @@ Physical film emulation, ISO-aware noise reduction, chromatic-aberration correct
   <img alt="Python 3.12 | 3.13 | 3.14" src="https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776ab">
   <img alt="Node.js 22.12+" src="https://img.shields.io/badge/node-22.12%2B-5fa04e">
   <img alt="Platforms: macOS | Windows | Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-555">
-  <img alt="Status: alpha, 0.2.0.dev0" src="https://img.shields.io/badge/status-alpha%20(0.2.0.dev0)-orange">
+  <img alt="Status: beta, 0.2.0-beta.1" src="https://img.shields.io/badge/status-beta%20(0.2.0--beta.1)-orange">
 </p>
 
 <p align="center"><a href="README.es.md">Leer en español</a> · <a href="docs/en/manual/index.md">User manual</a> · <a href="docs/technical/index.md">Technical deep-dive</a> · <a href="docs/ARCHITECTURE.md">Architecture</a> · <a href="docs/technical/BENCHMARKS.md">Benchmarks</a> · <a href="CONTRIBUTING.md">Contribute</a></p>
@@ -201,7 +201,7 @@ The seed comes from the file's **content**, so renaming a file changes nothing a
 
 | Item | Specification |
 |---|---|
-| **Product** | Engine `revelado` 0.2.0.dev0 (alpha) · MCP server `revelado-mcp` 0.1.0 · web UI 0.1.0 |
+| **Product** | Revelado 0.2.0-beta.1 (beta): engine `revelado`, MCP server `revelado-mcp` and web UI share the version |
 | **Category** | Local RAW developer, film emulator and culling tool with a localhost API |
 | **RAW formats recognised** | `.arw .cr2 .cr3 .nef .nrw .dng .raf .orf .rw2 .pef .srw .3fr .iiq .x3f .erf .kdc .mrw .rwl`. Decoding is done by RawTherapee and LibRaw, so camera support follows those projects. |
 | **RAW formats tested** (CC0 files, full develop) | Sony ARW (ILCE-7M4, ILME-FX3) · Canon CR2 (EOS 6D) · Canon CR3 (EOS R50) · Nikon NEF (Z 6) · Fujifilm RAF, X-Trans (X-T3). DNG, RW2, ORF and the other formats are accepted but **not yet covered** by the public test set. |
