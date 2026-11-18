@@ -2,4 +2,4 @@
 """Revelado MCP server: lets an MCP client (Claude Code, Claude Desktop, ...) drive a running Revelado engine."""
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0b1"

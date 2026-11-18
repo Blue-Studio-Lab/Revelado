@@ -1,6 +1,6 @@
 {
   "name": "revelado",
-  "version": "0.1.0",
+  "version": "0.2.0b1",
   "description": "Drive the local Revelado RAW developer from Claude Code: technical culling, diagnostics, sample-first developing and safe exports. Works with Claude Code and Claude Desktop through MCP.",
   "author": {
     "name": "Jorge Luis Peña Sanchez",

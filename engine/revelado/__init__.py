@@ -6,4 +6,4 @@ develop pipeline (RAW develop + noise/CA clean-up, Kodak Ektar 100 film emulatio
 framing) run through a queue that executes ONE heavy job at a time.
 """
 
-__version__ = "0.2.0.dev0"
+__version__ = "0.2.0b1"

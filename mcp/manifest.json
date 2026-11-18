@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "revelado",
   "display_name": "Revelado",
-  "version": "0.1.0",
+  "version": "0.2.0b1",
   "description": "Drive the local Revelado RAW developer: technical culling, diagnostics, sample-first developing and safe exports.",
   "long_description": "Connects Claude Desktop to the Revelado engine running on this computer. Only the folders you choose below can be opened, exports go only to the export folders you choose, originals are never modified, and previews sent to Claude are at most 1024 px without metadata. The Revelado app/engine must be running.",
   "author": {

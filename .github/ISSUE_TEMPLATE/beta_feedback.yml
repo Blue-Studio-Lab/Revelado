@@ -1,0 +1,52 @@
+name: Beta feedback
+description: Tell us how installing and using the beta went, good or bad.
+labels: [beta-feedback, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying the Revelado beta. Short answers are fine.
+        **Do not attach photos of real people (clients, family, strangers), client names or private file paths.**
+        If a RAW file is needed to reproduce a problem, link a CC0 sample (for example from raw.pixls.us) instead.
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did the installation go?
+      options: [Worked first time, Worked after some fixes, Did not work]
+    validations: { required: true }
+  - type: textarea
+    id: install_notes
+    attributes:
+      label: What got in the way while installing (if anything)?
+      description: Missing tool, unclear step in the README, error message…
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS (Apple silicon), macOS (Intel), Windows, Linux, Other]
+    validations: { required: true }
+  - type: input
+    id: camera
+    attributes:
+      label: Camera(s) and RAW format you tried
+      placeholder: "Sony A7 IV (ARW), Fujifilm X-T5 (RAF)"
+  - type: textarea
+    id: results
+    attributes:
+      label: What did you think of the results?
+      description: Noise, colour, film look, culling, speed, anything that surprised you.
+  - type: textarea
+    id: bugs
+    attributes:
+      label: Anything broken?
+      description: Steps to reproduce, and the error text if there is one. For a detailed bug, the Bug report form is also fine.
+  - type: input
+    id: version
+    attributes:
+      label: Revelado version or commit
+      placeholder: "v0.2.0-beta.1"
+  - type: dropdown
+    id: ai
+    attributes:
+      label: Did you use the AI features?
+      options: [No, With my own API key, Through the MCP server / Claude Code plugin]

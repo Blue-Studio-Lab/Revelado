@@ -12,7 +12,7 @@
       "name": "revelado",
       "source": "./mcp/plugin/revelado",
       "description": "Cull, diagnose, develop and export with the local Revelado engine.",
-      "version": "0.1.0",
+      "version": "0.2.0b1",
       "license": "GPL-3.0-or-later"
     }
   ]

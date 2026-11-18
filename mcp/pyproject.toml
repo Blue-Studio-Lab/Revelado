@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "revelado-mcp"
-version = "0.1.0"
+version = "0.2.0b1"
 description = "MCP server that lets Claude Code, Claude Desktop or any MCP client drive the local Revelado RAW developer"
 readme = "README.md"
 license = "GPL-3.0-or-later"

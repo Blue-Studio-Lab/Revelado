@@ -18,7 +18,7 @@ Emulación física de película, reducción de ruido según el ISO, corrección 
   <img alt="Python 3.12 | 3.13 | 3.14" src="https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-3776ab">
   <img alt="Node.js 22.12+" src="https://img.shields.io/badge/node-22.12%2B-5fa04e">
   <img alt="Plataformas: macOS | Windows | Linux" src="https://img.shields.io/badge/plataforma-macOS%20%7C%20Windows%20%7C%20Linux-555">
-  <img alt="Estado: alfa, 0.2.0.dev0" src="https://img.shields.io/badge/estado-alfa%20(0.2.0.dev0)-orange">
+  <img alt="Estado: beta, 0.2.0-beta.1" src="https://img.shields.io/badge/estado-beta%20(0.2.0--beta.1)-orange">
 </p>
 
 <p align="center"><a href="README.md">Read in English</a> · <a href="docs/es/manual/index.md">Manual de usuario</a> · <a href="docs/technical/index.md">Documentación técnica</a> · <a href="docs/ARCHITECTURE.md">Arquitectura</a> · <a href="docs/technical/BENCHMARKS.md">Mediciones</a> · <a href="CONTRIBUTING.md">Contribuir</a></p>
@@ -201,7 +201,7 @@ La semilla sale del **contenido** del archivo: renombrarlo no cambia nada y el m
 
 | Concepto | Especificación |
 |---|---|
-| **Producto** | Motor `revelado` 0.2.0.dev0 (alfa) · servidor MCP `revelado-mcp` 0.1.0 · interfaz web 0.1.0 |
+| **Producto** | Revelado 0.2.0-beta.1 (beta): el motor `revelado`, el servidor MCP `revelado-mcp` y la interfaz web comparten versión |
 | **Categoría** | Revelador RAW local, emulador de película y herramienta de selección con una API en localhost |
 | **Formatos RAW reconocidos** | `.arw .cr2 .cr3 .nef .nrw .dng .raf .orf .rw2 .pef .srw .3fr .iiq .x3f .erf .kdc .mrw .rwl`. La decodificación la hacen RawTherapee y LibRaw, así que la compatibilidad de cámaras depende de esos proyectos. |
 | **Formatos RAW probados** (archivos CC0, revelado completo) | Sony ARW (ILCE-7M4, ILME-FX3) · Canon CR2 (EOS 6D) · Canon CR3 (EOS R50) · Nikon NEF (Z 6) · Fujifilm RAF, X-Trans (X-T3). DNG, RW2, ORF y los demás se aceptan, pero **todavía no están cubiertos** por el conjunto de pruebas público. |
@@ -274,6 +274,21 @@ python scripts/benchmark_quality.py --only nr   # o bien: ca | perf
 ## Inicio rápido
 
 Necesitas **Python 3.12–3.14**, **Node.js 22 LTS (22.12 o superior) o 24 LTS**, **git** y **[ExifTool](https://exiftool.org)**. Para revelar RAW también necesitas **[RawTherapee](https://rawtherapee.com) 5.10 o superior**, con `rawtherapee-cli` en el `PATH`.
+
+> **Lo más fácil: que lo instale Claude Code.** Pega esto en [Claude Code](https://claude.com/claude-code) (o en otro agente con acceso a tu terminal):
+>
+> ```text
+> Instala Revelado desde https://github.com/Blue-Studio-Lab/Revelado en este equipo y déjalo funcionando.
+> 1. Clónalo en ~/Revelado (si ya existe, haz git pull).
+> 2. Lee README.es.md y la página de instalación del manual para mi sistema antes de instalar nada; sigue exactamente el "Inicio rápido".
+> 3. Comprueba los requisitos y dime qué falta antes de instalar: Python 3.12–3.14, Node.js 22.12 o superior (o 24 LTS), git, ExifTool y RawTherapee 5.10 o superior (hace falta para revelar RAW; si falta, enséñame cómo instalar la versión oficial para mi sistema y espera a que te confirme).
+> 4. Instala el motor en un entorno virtual de Python y las dependencias de la interfaz, como indica el Inicio rápido.
+> 5. Copia engine/.env.example a engine/.env. No pongas ninguna API key por tu cuenta: la IA es opcional.
+> 6. Arranca el motor y la interfaz, abre la dirección local y comprueba que /api/health responde ok.
+> 7. Ejecuta las pruebas del motor (pytest) y de la interfaz (npm test) y dime el resultado.
+> 8. Solo si te lo confirmo: configura el servidor MCP (mcp/README.md) con acceso únicamente a la carpeta de fotos que yo indique.
+> No borres ni modifiques nada fuera de ~/Revelado sin preguntarme. Al terminar, dime qué instalaste, qué versiones y cómo arrancarlo y detenerlo.
+> ```
 
 <details open><summary><b>macOS</b></summary>
 
