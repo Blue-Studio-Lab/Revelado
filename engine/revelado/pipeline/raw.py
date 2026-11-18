@@ -202,7 +202,15 @@ def nr_params(iso: float, ev: float | None) -> dict:
             "deconv_contrast": deconv_contrast}
 
 
-def _nr_pp3_text(nr: dict) -> str:
+def _nr_pp3_text(nr: dict, preblack: float | None = None) -> str:
+    """Partial pp3 (NR + demosaic). ``preblack`` = K DN: RawTherapee's black is lowered by K on all four CFA
+    channels (PreBlack0..3 = -K) so high-ISO noise is not clipped at 0 before demosaic (see pedestal_probe);
+    None leaves the text exactly as before. nr mode "off" disables RT's pyramid NR altogether."""
+    if nr.get("mode") == "off":
+        # "off" is really off: before, only luma/level were zeroed and RT's pyramid chroma (CMethod=AUT) still ran
+        head = "[Directional Pyramid Denoising]\nEnabled=false\n"
+    else:
+        head = None
     sharp = ""
     if nr.get("deconv_contrast") is not None:
         sharp = f"""
@@ -210,6 +218,12 @@ def _nr_pp3_text(nr: dict) -> str:
 AutoContrast=false
 Contrast={nr['deconv_contrast']:.0f}
 """
+    pb = "" if preblack is None else "".join(f"PreBlack{i}={-float(preblack):.0f}\n" for i in range(4))
+    if head is not None:
+        return f"""{head}
+[RAW Bayer]
+Method={nr['demosaic']}
+{pb}{sharp}"""
     return f"""[Directional Pyramid Denoising]
 Enabled=true
 Enhance=false
@@ -231,7 +245,7 @@ CCCurve=0;
 
 [RAW Bayer]
 Method={nr['demosaic']}
-{sharp}"""
+{pb}{sharp}"""
 
 
 # ----------------------------------------------------------------------------------------------
@@ -347,6 +361,172 @@ def half_linear(arw: str | Path):
     return np.maximum(rgb, 0), clip, info
 
 
+# ----------------------------------------------------------------------------------------------
+# Pedestal fix (very high ISO): RawTherapee subtracts the black level and clips negatives to 0 BEFORE demosaic.
+# When the dark noise is comparable to the shadow signal (D850 ISO 25600: sigma ~90-145 DN vs 10-70 DN of signal)
+# that rectifies the noise: E[max(x, 0)] > E[x], channel means rise by tens of DN and the WB gains (R 1.5, B 1.9)
+# turn the lifted shadows magenta/purple. Fix: RT's black is lowered by K = min(black, 4 sigma_dark) (PreBlack),
+# so almost nothing is clipped, and the known pedestal is removed afterwards in linear light:
+#     img = (img_rt - P) / alpha,   alpha = 1 - K * mean(rowsum(A))
+# with RT's response fitted per 16x16-superpixel block against an unclipped rawpy superpixel X0 (camera space, WB
+# applied, LibRaw black):  Y_rt = A @ X0 + P  (3x3 + intercept, all unclipped blocks). The intercept is measured
+# where it matters (dark blocks included) instead of extrapolated: a slope-only fit on bright blocks gives
+# P = A @ (wb*K), but A is poorly constrained off the neutral axis and wb*K is magenta (R50: green P +6 %, shadows
+# 2.9 L too dark); the LibRaw-matrix analytic pedestal is wrong when RT's matrix/white differ (D850: +3.7..7.5 L).
+# The intercept fit was within ~1 L / ~1.5 a,b of the raw truth on both (see the fix report).
+#
+# GATE (keeps normal ISO pixel-identical to the old path; only the timing fields of the metadata differ): the expected rectification bias of the darkest 1 % of
+# the frame (32x32 blocks of one green CFA plane), in exposed linear units,
+#     shift = bias(mu_dark, sigma_dark) / (white - black) * 2**ev,   bias(mu, s) = s*phi(mu/s) - mu*(1 - Phi(mu/s))
+# must reach PEDESTAL_SHIFT_MIN; otherwise (or for non-Bayer sensors / black 0 / K < 1 DN) nothing changes: no
+# PreBlack in the pp3, no pedestal removal, no linear-mean restore in clean(). sigma_dark = MAD of vertical
+# same-colour differences in those blocks (robust to scene gradients).
+# ----------------------------------------------------------------------------------------------
+PEDESTAL_SHIFT_MIN = 3.0e-3        # exposed linear, green. Measured: D850 ISO25600 0.0107, R50 ISO32000 0.0100
+#                                    (both fixed); FX3 ISO20000 0.00095, K-3 III ISO12800 0, ISO 100-400 files 0
+#                                    (all unchanged). ~3x margin on both sides.
+PEDESTAL_K_SIGMAS = 4.0
+PEDESTAL_DARK_BLOCK = 32           # px of one CFA plane for the dark-noise estimate
+PEDESTAL_FIT_BLOCK = 16            # superpixels per fit block
+PEDESTAL_MIN_BLOCKS = 40           # below this (or poor orientation match) the analytic pedestal is used
+PEDESTAL_FIT_MAX = 0.6             # blocks brighter than this (base units) are left out of the fit
+_FLIP_TO_K = {0: 0, 3: 2, 6: 1, 5: 3}  # LibRaw flip -> np.rot90 k that takes RT's (upright) output back to sensor
+
+
+def _rect_bias(mu: float, sigma: float) -> float:
+    """E[max(X, 0)] - mu for X ~ N(mu, sigma): mean lift caused by clipping negatives at 0."""
+    import math
+    if sigma <= 0:
+        return 0.0
+    t = mu / sigma
+    phi = math.exp(-0.5 * t * t) / math.sqrt(2 * math.pi)
+    Phi = 0.5 * (1 + math.erf(t / math.sqrt(2)))
+    return float(sigma * phi - mu * (1 - Phi))
+
+
+def dark_noise(raw: np.ndarray, cols: np.ndarray, black: np.ndarray, block: int = PEDESTAL_DARK_BLOCK,
+               frac: float = 0.01) -> tuple[float, float]:
+    """(sigma_dark, mu_dark) in DN on one green CFA plane: robust noise (MAD of vertical same-colour differences)
+    and median signal above black of the darkest ``frac`` of ``block``x``block`` tiles."""
+    pos = [(dy, dx) for dy in range(2) for dx in range(2) if int(cols[dy, dx]) in (1, 3)]
+    dy, dx = pos[0] if pos else (0, 0)
+    c = int(cols[dy, dx])
+    g = raw[dy::2, dx::2]
+    h, w = (g.shape[0] // block) * block, (g.shape[1] // block) * block
+    t = g[:h, :w].astype(np.float32).reshape(h // block, block, w // block, block).transpose(0, 2, 1, 3)
+    mu = t.mean((2, 3)).ravel()
+    n = max(8, int(round(mu.size * frac)))
+    idx = np.argsort(mu, kind="stable")[:n]
+    tt = t.reshape(-1, block, block)[idx]
+    d = (tt[:, 1:, :] - tt[:, :-1, :]).ravel()
+    sig = float(np.median(np.abs(d - np.median(d))) * 1.4826 / np.sqrt(2))
+    return sig, float(np.median(mu[idx]) - float(black[c]))
+
+
+def pedestal_probe(raw_path: str | Path, ev: float | None) -> dict:
+    """Decide (gate) the pedestal fix for this RAW and, when applied, keep the small per-block statistics of an
+    unclipped superpixel for pedestal_fit(). Keys starting with '_' are internal (not JSON)."""
+    import rawpy
+    gain = 2.0 ** (ev if ev is not None else 2.0)
+    info: dict = {"applied": False}
+    with rawpy.imread(str(raw_path)) as r:
+        pat = np.asarray(r.raw_pattern) if r.raw_pattern is not None else None
+        if pat is None or pat.shape != (2, 2) or r.num_colors != 3:
+            info["reason"] = "not a 2x2 Bayer sensor"
+            return info
+        raw = r.raw_image_visible
+        cols = r.raw_colors_visible
+        black = np.array(r.black_level_per_channel, np.float32)
+        white = float(r.white_level)
+        rng = white - float(black.mean())
+        sig, mu = dark_noise(raw, cols, black)
+        K = float(min(float(black.min()), np.ceil(PEDESTAL_K_SIGMAS * sig)))
+        shift = _rect_bias(mu, sig) / rng * gain
+        info.update({"sigma_dark": round(sig, 2), "mu_dark": round(mu, 2), "black": round(float(black.mean()), 1),
+                     "white": white, "K": K, "shift_est": round(shift, 6), "threshold": PEDESTAL_SHIFT_MIN})
+        if K < 1 or shift < PEDESTAL_SHIFT_MIN:
+            info["reason"] = "black level 0" if K < 1 else "dark noise small vs shadow signal"
+            return info
+        info["applied"] = True
+        wb = np.array(r.camera_whitebalance[:3], np.float64)
+        if not (np.all(np.isfinite(wb)) and np.all(wb > 0)):
+            wb = np.ones(3)                          # missing as-shot WB: the 3x3 fit absorbs any channel scale
+        wb = wb / wb[1]
+        s = r.sizes
+        oy, ox = s.crop_top_margin - s.top_margin, s.crop_left_margin - s.left_margin
+        ch, cw = (s.crop_height, s.crop_width) if (s.crop_width and s.crop_height) else raw.shape
+        if oy < 0 or ox < 0 or oy + ch > raw.shape[0] or ox + cw > raw.shape[1]:
+            oy, ox, (ch, cw) = 0, 0, raw.shape
+        oy, ox = oy - oy % 2, ox - ox % 2            # keep the CFA phase of cols[0:2, 0:2]
+        h2, w2 = ch // 2, cw // 2
+        B = PEDESTAL_FIT_BLOCK
+        hb, wb_ = h2 // B, w2 // B
+        Xb = np.zeros((hb, wb_, 3), np.float64)
+        Cb = np.zeros((hb, wb_), bool)
+        for dy in range(2):
+            for dx in range(2):
+                c = int(cols[oy + dy, ox + dx])
+                cc = 1 if c == 3 else c
+                v = raw[oy + dy:oy + 2 * h2:2, ox + dx:ox + 2 * w2:2][:hb * B, :wb_ * B].astype(np.float32)
+                Cb |= (v >= white * 0.95).reshape(hb, B, wb_, B).any((1, 3))
+                m = v.reshape(hb, B, wb_, B).mean((1, 3), dtype=np.float64)
+                Xb[..., cc] += (m - (black[c] - K)) * (0.5 if cc == 1 else 1.0)
+                del v
+        Xb *= wb
+        info.update({"flip": int(s.flip), "_Xb": Xb, "_Cb": Cb, "_wb": wb, "_hw2": (h2, w2),
+                     "_P_analytic": (_cam_to_rec2020(r) @ (wb * K)) / (rng + K), "_alpha_analytic": rng / (rng + K)})
+    return info
+
+
+def pedestal_fit(img: np.ndarray, probe: dict) -> tuple[np.ndarray, float, dict]:
+    """Fit RT's response on the block grid of pedestal_probe() -> (P (3,), alpha, info). img: RT output (upright,
+    camera crop, linear). Orientation: the RT image is brought back to sensor orientation by trying the rotations
+    compatible with its aspect ratio (LibRaw's flip is the expected one) and keeping the best block correlation."""
+    import cv2
+    Xb, Cb, wb = probe["_Xb"], probe["_Cb"], probe["_wb"]
+    h2, w2 = probe["_hw2"]
+    K = probe["K"]
+    B = PEDESTAL_FIT_BLOCK
+    hb, wbk = Xb.shape[:2]
+    H, W = img.shape[:2]
+    lx = np.log(np.maximum(Xb @ np.array([0.25, 0.5, 0.25]), 1.0)).ravel()          # DN
+    best = None
+    for k in (0, 1, 2, 3):
+        oh, ow = (h2, w2) if k % 2 == 0 else (w2, h2)
+        if abs(np.log((H / W) / (oh / ow))) > 0.05:
+            continue
+        small = cv2.resize(img, (ow, oh), interpolation=cv2.INTER_AREA)
+        sens = np.ascontiguousarray(np.rot90(small, k))[:hb * B, :wbk * B]
+        Yb = sens.reshape(hb, B, wbk, B, 3).mean((1, 3), dtype=np.float64)
+        ly = np.log(np.maximum(Yb @ np.array([0.25, 0.5, 0.25]), 1e-5)).ravel()
+        corr = float(np.corrcoef(lx, ly)[0, 1])
+        if best is None or corr > best[0]:
+            best = (corr, k, Yb)
+    finfo = {"flip": probe.get("flip"), "expected_rot": _FLIP_TO_K.get(probe.get("flip"))}
+    P_an, a_an = np.asarray(probe["_P_analytic"], np.float64), float(probe["_alpha_analytic"])
+    finfo["P_analytic"] = [round(float(v), 6) for v in P_an]
+    finfo["alpha_analytic"] = round(a_an, 6)
+    if best is not None:
+        corr, k, Yb = best
+        finfo.update({"rot_k": k, "orientation_corr": round(corr, 4)})
+        X0, Yf, Cf = Xb.reshape(-1, 3) - wb * K, Yb.reshape(-1, 3), Cb.ravel()
+        ok = (~Cf) & (Yf.max(1) < PEDESTAL_FIT_MAX)
+        n = int(ok.sum())
+        finfo["fit_blocks"] = n
+        if n >= PEDESTAL_MIN_BLOCKS and corr >= 0.9:
+            Ai = np.linalg.lstsq(np.c_[X0[ok], np.ones(n)], Yf[ok], rcond=None)[0].T
+            A, P = Ai[:, :3], Ai[:, 3]
+            res = Yf[ok] - X0[ok] @ A.T - P
+            # relative RMS of the block fit (noise + RT's local, non-linear steps; ~1-2 % at ISO 25600-32000)
+            finfo["fit_residual"] = round(float(np.sqrt((res ** 2).mean()) / np.sqrt((Yf[ok] ** 2).mean())), 5)
+            alpha = float(1.0 - K * np.mean(A.sum(1)))
+            if 0.5 < alpha <= 1.0 and np.all(np.isfinite(P)):
+                finfo["method"] = "fit"
+                return P.astype(np.float32), alpha, finfo
+    finfo["method"] = "analytic (fit unavailable)"
+    return P_an.astype(np.float32), a_an, finfo
+
+
 HL_CEIL = 0.18 * 2 ** 4.0
 MAX_UNDER = 1.0
 
@@ -443,12 +623,17 @@ def develop(arw: str | Path, out_tif: str | Path, ev: float | None = None, expos
         ev = _lookup_ev(arw, exposure_json)
     nr = nr_params(meta["iso"], ev)
     nr = adjust_nr(nr, nr_mode)
+    try:
+        ped = pedestal_probe(arw, ev)                    # gate: decided on the RAW before RawTherapee runs
+    except Exception as e:  # noqa: BLE001  (LibRaw cannot read it but RawTherapee may: old path, unchanged)
+        ped = {"applied": False, "reason": f"probe failed: {type(e).__name__}"}
     tmp_dir = Path(tmp_dir or out_tif.parent / "_tmp_rt")
     tmp_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=tmp_dir) as td:
         base_pp3 = _write_pp3(Path(td))
         nr_pp3 = Path(td) / "nr.pp3"
-        nr_pp3.write_text(_nr_pp3_text(nr) + ("" if raw_ca else "\n[RAW]\nCA=false\n"))
+        nr_pp3.write_text(_nr_pp3_text(nr, preblack=ped["K"] if ped["applied"] else None)
+                          + ("" if raw_ca else "\n[RAW]\nCA=false\n"))
         rt_out = Path(td) / (arw.stem + ".tif")
         cmd = [require_tool("rawtherapee-cli"), "-q", "-Y", "-t", "-b32", "-p", str(base_pp3.resolve()),
                "-p", str(nr_pp3.resolve()),
@@ -471,10 +656,23 @@ def develop(arw: str | Path, out_tif: str | Path, ev: float | None = None, expos
         th, tw = min(th, h), min(tw, w)
         oy, ox = (h - th) // 2, (w - tw) // 2
         img = np.ascontiguousarray(img[oy:oy + th, ox:ox + tw])
+    pinfo = {k: v for k, v in ped.items() if not k.startswith("_")}
+    if ped["applied"]:
+        try:
+            P, alpha, finfo = pedestal_fit(img, ped)
+        except Exception as e:  # noqa: BLE001  (PreBlack was applied: the pedestal must still come off)
+            P = np.asarray(ped["_P_analytic"], np.float32)
+            alpha = float(ped["_alpha_analytic"])
+            finfo = {"method": f"analytic (fit failed: {type(e).__name__})"}
+        img -= P
+        img /= np.float32(alpha)
+        pinfo.update(finfo, P=[round(float(v), 6) for v in P], alpha=round(alpha, 6))
+    del ped
     cinfo = {"clean": "off"}
     if clean:
         t_c = time.time()
-        img, cinfo = cleanmod.clean(img, ev if ev is not None else 2.0, nr["level"], do_defringe=defringe)
+        img, cinfo = cleanmod.clean(img, ev if ev is not None else 2.0, nr["level"], do_defringe=defringe,
+                                    restore_linear_mean=pinfo["applied"])
         cinfo["seconds"] = round(time.time() - t_c, 2)
     lens = {"distortion": "off"}
     if distortion:
@@ -488,6 +686,7 @@ def develop(arw: str | Path, out_tif: str | Path, ev: float | None = None, expos
     desc = {"encoding": ENCODING, "source": arw.name, "iso": meta["iso"], "lens": meta["lens"],
             "focal": meta["focal"], "fnumber": meta["fnumber"], "shutter": meta["shutter"],
             "ev_suggested": ev, "nr": nr, "clean": cinfo, "lens_correction": lens, "base_version": 2,
+            **({"pedestal": pinfo} if pinfo["applied"] else {}),     # absent when gated off (byte-identical)
             "pipeline": ("rawtherapee-cli AMaZE + rawCA(auto x3, avoid colour shift) + Coloropp HL + capture "
                          "sharpening + pyramid NR; python lin + clean.py (defringe, luma NLM, chroma guided NR) "
                          "+ distortion")}
@@ -495,6 +694,7 @@ def develop(arw: str | Path, out_tif: str | Path, ev: float | None = None, expos
                      description=json.dumps(desc), metadata=None, software="revelado/pipeline/raw.py")
     res = {"file": arw.name, "out": str(out_tif), "shape": list(img.shape), "seconds_total": round(time.time() - t0, 2),
            "seconds_rt": round(t_rt, 2), "ev_suggested": ev, "nr": nr, "clean": cinfo, "lens": lens,
+           "pedestal": pinfo,
            "stats": stats}
     return res
 

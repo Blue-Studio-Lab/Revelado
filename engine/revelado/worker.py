@@ -131,7 +131,8 @@ def main(params_path: str) -> int:
         r = rawdev.develop(raw, base0, ev=ev, exposure_json=None, tmp_dir=work / "_tmp_rt",
                            clean=ep.get("nr", "auto") != "off", nr_mode=ep.get("nr", "auto"),
                            defringe=ep.get("ca", "auto") != "off", raw_ca=ep.get("ca", "auto") != "off")
-        side["stages"]["develop"] = {k: r[k] for k in ("seconds_total", "seconds_rt", "nr", "clean", "lens", "stats")
+        side["stages"]["develop"] = {k: r[k] for k in ("seconds_total", "seconds_rt", "nr", "clean", "lens", "stats",
+                                                                   "pedestal")
                                      if k in r}
     else:
         P("develop", 0.02, "base lineal desde el JPG de cámara")

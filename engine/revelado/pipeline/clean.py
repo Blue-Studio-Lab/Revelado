@@ -12,6 +12,12 @@ Trabaja sobre la imagen lineal Rec.2020 EXPUESTA (base * 2**ev) en OkLab y devue
   4. Luma: NL-means sobre L (OkLab) solo si el ruido medido supera el objetivo, mezclado para llegar al
      objetivo (no plastifica: conserva parte de la textura original).
 L (luminancia) no se toca salvo en el paso 4; a/b solo en 2-3.
+  5. (solo con restore_linear_mean=True, es decir cuando raw.py quito el pedestal de ISO muy alto) se devuelve la
+     media LOCAL en luz LINEAL: promediar ruido fuerte en OkLab (raiz cubica) sesga los casi-negros hacia
+     verde-amarillo; se suma el paso-bajo (gaussiana sigma 48 px, calculada a 1/8) de (entrada - salida) en lineal.
+     El ruido es de media cero en lineal, asi que esto cancela solo el sesgo, no devuelve ruido. Solo en zonas
+     oscuras (peso 1 bajo luminancia expuesta 0.05, 0 sobre 0.15, convolucion normalizada): las altas luces no
+     entran ni reciben la correccion (si no, su cambio legitimo se difunde como halo de 48 px alrededor de focos).
 """
 from __future__ import annotations
 
@@ -216,9 +222,65 @@ def luma_denoise(lab: np.ndarray, nz: dict, target: float = 0.45, max_h: float =
                  "keep_residual_mid": round(float(min(1, max(0.3, target / s_md))), 3)}
 
 
+RESTORE_DARK_LO = 0.05     # exposed linear luminance: full linear-mean restore at or below this ...
+RESTORE_DARK_HI = 0.15     # ... none above this. The OkLab mean bias is a near-black effect (measured D850 ISO25600:
+#                            -140 % .. -17 % of the local mean below 0.02, ~1-2 % above 0.05); highlights must stay out
+#                            of the low-pass or their (large, legitimate) clean() change bleeds as a 48 px halo.
+
+
+def _dark_weight(x: np.ndarray, lo: float | None, hi: float | None) -> np.ndarray | None:
+    if lo is None or hi is None:
+        return None
+    return np.clip((hi - x @ LUMA_W) / np.float32(hi - lo), 0.0, 1.0)
+
+
+def restore_local_linear_mean(x_in: np.ndarray, x_out: np.ndarray, sigma: float = 48.0, f: int = 8,
+                              band: int = 512, dark_lo: float | None = None,
+                              dark_hi: float | None = None) -> np.ndarray:
+    """x_out += lowpass(x_in - x_out) in LINEAR light (Gaussian ``sigma`` px computed at 1/``f`` resolution), in
+    place, banded (no full-size temporaries). Cancels the mean bias of filtering noisy near-blacks in OkLab while
+    keeping the clean result's detail: local linear means of the output match the input's.
+    With ``dark_lo``/``dark_hi`` (same units as the images) only dark pixels take part: weight w = 1 below dark_lo
+    (luminance of x_out) falling to 0 at dark_hi; the low-pass is a normalised convolution of w*(in - out) and the
+    correction is applied scaled by w, so bright areas neither feed nor receive it (no halos around lights)."""
+    H, W = x_out.shape[:2]
+    hs, ws = max(1, H // f), max(1, W // f)
+    small = np.zeros((hs, ws, 3), np.float32)
+    wsm = np.zeros((hs, ws), np.float32)
+    weighted = dark_lo is not None and dark_hi is not None
+    rows = max(f, (band // f) * f)
+    for y0 in range(0, hs * f, rows):                 # f x f block means of the difference (remainder ignored)
+        y1 = min(hs * f, y0 + rows)
+        d = x_in[y0:y1, :ws * f] - x_out[y0:y1, :ws * f]
+        if weighted:
+            w = _dark_weight(x_out[y0:y1, :ws * f], dark_lo, dark_hi)
+            d *= w[..., None]
+            wsm[y0 // f:y1 // f] = w.reshape((y1 - y0) // f, f, ws, f).mean((1, 3))
+            del w
+        small[y0 // f:y1 // f] = d.reshape((y1 - y0) // f, f, ws, f, 3).mean((1, 3))
+        del d
+    small = cv2.GaussianBlur(small, (0, 0), sigma / f, borderType=cv2.BORDER_REFLECT)
+    if weighted:
+        wsm = cv2.GaussianBlur(wsm, (0, 0), sigma / f, borderType=cv2.BORDER_REFLECT)
+        small /= np.maximum(wsm, 0.05)[..., None]     # few dark pixels around -> proportionally smaller correction
+    xs = ((np.arange(W, dtype=np.float32) + 0.5) / f - 0.5)
+    for y0 in range(0, H, band):                      # bilinear upsample (cv2.resize INTER_LINEAR geometry)
+        y1 = min(H, y0 + band)
+        ys = ((np.arange(y0, y1, dtype=np.float32) + 0.5) / f - 0.5)
+        mx = np.broadcast_to(xs[None, :], (y1 - y0, W)).astype(np.float32)
+        my = np.broadcast_to(ys[:, None], (y1 - y0, W)).astype(np.float32)
+        c = cv2.remap(small, mx, my, interpolation=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        if weighted:
+            c *= _dark_weight(x_out[y0:y1], dark_lo, dark_hi)[..., None]
+        x_out[y0:y1] += c
+        del c
+    return x_out
+
+
 def clean(img: np.ndarray, ev: float, level: float, do_defringe: bool = True,
-          luma_target: float = 0.45) -> tuple[np.ndarray, dict]:
-    """img: base lineal Rec.2020 sin exponer (float32 HxWx3). Devuelve (img_limpia, info)."""
+          luma_target: float = 0.45, restore_linear_mean: bool = False) -> tuple[np.ndarray, dict]:
+    """img: base lineal Rec.2020 sin exponer (float32 HxWx3). Devuelve (img_limpia, info).
+    restore_linear_mean: paso 5 (solo cuando raw.py aplico la correccion de pedestal; si no, salida identica)."""
     t0 = time.time()
     gain = np.float32(2.0 ** (ev if ev is not None else 2.0))
     x = img * gain
@@ -247,5 +309,8 @@ def clean(img: np.ndarray, ev: float, level: float, do_defringe: bool = True,
     out = oklab_inv(lab)
     del lab
     out /= gain
+    if restore_linear_mean:
+        restore_local_linear_mean(img, out, dark_lo=RESTORE_DARK_LO / float(gain), dark_hi=RESTORE_DARK_HI / float(gain))
+        info["linear_mean_restored"] = True
     info["seconds"] = round(time.time() - t0, 2)
     return out, info
